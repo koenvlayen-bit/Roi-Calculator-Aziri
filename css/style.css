@@ -288,6 +288,16 @@ table tr.neg td:last-child { color: var(--red); }
 .error { background: #FEF2F2; border: 1px solid #FECACA; border-radius: var(--radius-sm); padding: 12px 14px; font-size: 13px; color: var(--red); margin-top: 12px; }
 .success { font-size: 13px; color: var(--green); margin-top: 10px; display: flex; align-items: center; gap: 6px; font-weight: 500; }
 
+/* SLIDER CARD */
+.slider-card { background:var(--bg-card);border:1.5px solid var(--aziri);border-radius:var(--radius);padding:20px 24px;margin-bottom:20px;box-shadow:0 2px 8px rgba(91,91,214,0.08); }
+.slider-header { display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:16px; }
+.slider-title { font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px; }
+.slider-sub { font-size:12px;color:var(--text-muted);line-height:1.5; }
+.slider-value-badge { background:var(--aziri);color:#fff;font-size:18px;font-weight:700;padding:8px 16px;border-radius:8px;white-space:nowrap;flex-shrink:0; }
+.slider { width:100%;-webkit-appearance:none;appearance:none;height:6px;border-radius:3px;background:linear-gradient(to right,var(--aziri) 60%,var(--border-mid) 60%);outline:none;margin-bottom:6px;cursor:pointer; }
+.slider::-webkit-slider-thumb { -webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--aziri);cursor:pointer;box-shadow:0 2px 6px rgba(91,91,214,0.3);border:2px solid #fff; }
+.slider::-moz-range-thumb { width:20px;height:20px;border-radius:50%;background:var(--aziri);cursor:pointer;border:2px solid #fff; }
+.slider-ticks { display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim);padding:0 2px; }
 /* INFO TOOLTIP */
 .info-tip { position:relative;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--border-mid);color:#fff;font-size:10px;font-weight:700;font-style:italic;cursor:help;margin-left:4px;vertical-align:middle; }
 .info-tip:hover { background:var(--aziri); }
