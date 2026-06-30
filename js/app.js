@@ -1,8 +1,5 @@
-// ─── STATE ───────────────────────────────────────────────────────────────────
 const state = {
-  screen: "welcome",
-  step: 0,
-  reductie: 0.8,
+  screen: "welcome", step: 0, reductie: 0.8,
   data: {
     bedrijfsnaam: "", sector: "", contactpersoon: "",
     aantalMedewerkers: "", kostprijsPerUur: 65, naamCoordinator: "",
@@ -42,9 +39,7 @@ function calc(d, reductie) {
   const bespOmzetJaar = (nietGefMaand*12)*r;
   const totaleJaarlijkseBesparing = bespAdminJaar+bespTijdverliesJaar+bespOmzetJaar;
 
-  const kostenJaar1 = eenmalig+licentie;
-  const kostenJaar2 = licentie;
-  const kostenJaar3 = licentie;
+  const kostenJaar1 = eenmalig+licentie, kostenJaar2 = licentie, kostenJaar3 = licentie;
   const totaleKosten3Jaar = kostenJaar1+kostenJaar2+kostenJaar3;
   const totaleBesparing3Jaar = totaleJaarlijkseBesparing*3;
   const nettoWinstJaar1 = totaleJaarlijkseBesparing-kostenJaar1;
@@ -66,11 +61,9 @@ function el(id){return document.getElementById(id);}
 function get(id){const e=el(id);return e?e.value:"";}
 function set(id,html){const e=el(id);if(e)e.innerHTML=html;}
 function show(id,v){const e=el(id);if(e)e.style.display=v?"block":"none";}
-function stepDots(current){
-  return `<div class="steps">${STEPS.map((s,i)=>`<div class="step-dot ${i<current?"done":i===current?"active":""}"></div>`).join("")}<span class="step-name">${STEPS[current]||""}</span></div>`;
-}
+function stepDots(cur){return `<div class="steps">${STEPS.map((s,i)=>`<div class="step-dot ${i<cur?"done":i===cur?"active":""}"></div>`).join("")}<span class="step-name">${STEPS[cur]||""}</span></div>`;}
 function backBtn(fn){return `<button class="btn-secondary" onclick="${fn}" style="margin-bottom:24px">← Terug</button>`;}
-function infoTip(text){return `<span class="info-tip" tabindex="0"><span class="info-tip-icon">i</span><span class="info-tip-bubble">${text}</span></span>`;}
+function infoTip(t){return `<span class="info-tip" tabindex="0"><span class="info-tip-icon">i</span><span class="info-tip-bubble">${t}</span></span>`;}
 
 function renderWelcome(){
   set("app",`<div>
@@ -91,7 +84,7 @@ function renderTranscript(){
     <span class="label">Modus B — Transcript analyseren</span>
     <div class="card">
       <div class="field"><label>Plak hier je gespreksnotities of transcript</label>
-        <textarea id="transcript-txt" placeholder="Bijv: 'Klant is Bakkerij Maes, sector voeding, 8 medewerkers...'"></textarea>
+        <textarea id="transcript-txt" placeholder="Bijv: 'Klant is Bakkerij Maes, sector voeding, 8 medewerkers. Ze wachten gemiddeld 5 minuten, 3x per week bij leveringsproblemen...'"></textarea>
       </div>
       <button class="btn-primary full" onclick="extractTranscript()">✨ &nbsp;Analyseer met AI</button>
       <div id="extract-status"></div>
@@ -116,24 +109,21 @@ async function extractTranscript(){
 function renderForm(){
   const d=state.data, s=state.step;
   let body="";
-  if(s===0){body=`
-    <span class="label">Klantinfo</span>
+  if(s===0){body=`<span class="label">Klantinfo</span>
     <div class="field"><label>Bedrijfsnaam *</label><input type="text" id="f0" value="${d.bedrijfsnaam}" placeholder="bijv. Bakkerij Maes"></div>
     <div class="field-grid">
       <div class="field"><label>Sector</label><input type="text" id="f1" value="${d.sector}" placeholder="bijv. voeding, bouw"></div>
       <div class="field"><label>Contactpersoon <span style="color:#9CA3AF;font-size:11px">(optioneel)</span></label><input type="text" id="f2" value="${d.contactpersoon}" placeholder="naam"></div>
     </div>
     <div class="btn-row"><button class="btn-primary" onclick="next(0)">Volgende →</button></div>`;}
-  else if(s===1){body=`
-    <span class="label">Team & kostprijs</span>
+  else if(s===1){body=`<span class="label">Team & kostprijs</span>
     <div class="field-grid">
       <div class="field"><label>Aantal operationele medewerkers</label><input type="number" id="f0" value="${d.aantalMedewerkers}" placeholder="bijv. 8" min="1"></div>
       <div class="field"><label>Kostprijs per uur (€) ${infoTip("Gebruik de totale werkgeverslasten (incl. pensioen, verzekeringen en vakantiegeld), niet alleen het brutoloon. Dit ligt vaak 1,3–1,5× hoger.")}</label><input type="number" id="f1" value="${d.kostprijsPerUur}" placeholder="65"><p class="hint">Standaard: € 65/u</p></div>
     </div>
     <div class="field"><label>Naam coördinator <span style="color:#9CA3AF;font-size:11px">(optioneel)</span></label><input type="text" id="f2" value="${d.naamCoordinator}" placeholder="bijv. Jana Claes"></div>
     <div class="btn-row"><button class="btn-secondary" onclick="prev()">←</button><button class="btn-primary" onclick="next(1)">Volgende →</button></div>`;}
-  else if(s===2){body=`
-    <span class="label">Operationeel tijdverlies</span>
+  else if(s===2){body=`<span class="label">Operationeel tijdverlies</span>
     <p style="font-size:13px;color:var(--text-muted);margin-bottom:18px;line-height:1.6">Denk op <strong>bedrijfsniveau</strong>: hoeveel mensen <em>samen</em> betrokken zijn bij een typisch wacht- of herstelmoment, hoelang dat duurt, en hoe vaak dit per week voorvalt voor het hele bedrijf.</p>
     <div class="field-grid">
       <div class="field"><label>Mensen per incident (totaal betrokken)</label><input type="number" id="f0" value="${d.aantalMensenPerIncident}" placeholder="bijv. 3" min="1"></div>
@@ -141,8 +131,7 @@ function renderForm(){
     </div>
     <div class="field"><label>Frequentie per week (bedrijfsbreed)</label><input type="number" id="f2" value="${d.frequentiePerWeek}" placeholder="bijv. 4" min="0" step="0.5"></div>
     <div class="btn-row"><button class="btn-secondary" onclick="prev()">←</button><button class="btn-primary" onclick="next(2)">Volgende →</button></div>`;}
-  else if(s===3){body=`
-    <span class="label">Niet-gefactureerde prestaties</span>
+  else if(s===3){body=`<span class="label">Niet-gefactureerde prestaties</span>
     <div class="field"><label>Worden materialen, uren of diensten gebruikt die niet altijd gefactureerd worden?</label>
       <div class="toggle-group">
         <div class="toggle-btn ${d.nietGefactureerd?"active":""}" onclick="toggleNG(true)">Ja</div>
@@ -153,15 +142,13 @@ function renderForm(){
       <div class="field"><label>Geschat maandelijks niet-gefactureerd bedrag (€)</label><input type="number" id="f0" value="${d.nietGefactureerdMaand||""}" placeholder="bijv. 800" min="0"></div>
     </div>
     <div class="btn-row"><button class="btn-secondary" onclick="prev()">←</button><button class="btn-primary" onclick="next(3)">Volgende →</button></div>`;}
-  else if(s===4){body=`
-    <span class="label">Administratieve druk</span>
+  else if(s===4){body=`<span class="label">Administratieve druk</span>
     <div class="field-grid">
       <div class="field"><label>Uren manuele admin per week</label><input type="number" id="f0" value="${d.adminUrenPerWeek}" placeholder="bijv. 6" min="0" step="0.5"></div>
       <div class="field"><label>Kostprijs coördinator per uur (€) ${infoTip("Gebruik de totale werkgeverslasten (incl. pensioen, verzekeringen en vakantiegeld), niet alleen het brutoloon. Dit ligt vaak 1,3–1,5× hoger.")}</label><input type="number" id="f1" value="${d.kostprijsCoordinatorPerUur||d.kostprijsPerUur}" placeholder="${d.kostprijsPerUur||65}"><p class="hint">Standaard: teamgemiddelde</p></div>
     </div>
     <div class="btn-row"><button class="btn-secondary" onclick="prev()">←</button><button class="btn-primary" onclick="next(4)">Volgende →</button></div>`;}
-  else if(s===5){body=`
-    <span class="label">Investering</span>
+  else if(s===5){body=`<span class="label">Investering</span>
     <div class="field-grid">
       <div class="field"><label>Eenmalige ontwikkelingskosten (€)</label><input type="number" id="f0" value="${d.eenmaligeKosten}" placeholder="bijv. 15000" min="0"></div>
       <div class="field"><label>Jaarlijkse licentiekosten (€)</label><input type="number" id="f1" value="${d.jaarlijkseLicentie}" placeholder="bijv. 2400" min="0"></div>
@@ -216,11 +203,17 @@ function chartHtml(r){
 
 function renderResult(){
   const d=state.data, naam=d.bedrijfsnaam||"Klant";
+  const today=new Date().toLocaleDateString("nl-BE");
   set("app",`<div>
     <button class="btn-secondary" onclick="state.screen='form';render()" style="margin-bottom:24px">← Bewerken</button>
     <span class="label">ROI Infofiche · 3-jaars projectie</span>
-    <h2 style="font-size:20px;font-weight:600;margin-bottom:4px">${naam}</h2>
-    <p style="font-size:13px;color:var(--text-dim);margin-bottom:20px">${[d.sector,d.contactpersoon].filter(Boolean).join(" · ")}</p>
+    <h2 style="font-size:20px;font-weight:700;margin-bottom:4px">${naam}</h2>
+    <p style="font-size:13px;color:var(--text-dim);margin-bottom:20px">${[d.sector,d.contactpersoon].filter(Boolean).join(" · ")} · Opgesteld op ${today}</p>
+
+    <div class="confidential-banner">
+      🔒 <span><strong>Vertrouwelijk</strong> — Dit document is uitsluitend bestemd voor de ontvanger. Verspreiding of gebruik door derden is niet toegestaan zonder schriftelijke toestemming van Aziri.</span>
+    </div>
+
     <div class="slider-card">
       <div class="slider-header">
         <div>
@@ -234,7 +227,9 @@ function renderResult(){
         onchange="updateSlider(parseInt(this.value))">
       <div class="slider-ticks"><span>50%</span><span>60%</span><span>70%</span><span>80%</span><span>90%</span><span>100%</span></div>
     </div>
+
     <div id="result-content"></div>
+
     <div class="action-row" style="margin-top:20px">
       <button class="btn-primary" onclick="generatePDF()">⬇ &nbsp;Download PDF</button>
       <button class="btn-secondary" onclick="goWelcome()">Nieuwe klant</button>
@@ -295,7 +290,7 @@ function renderResultContent(){
       <div class="invest-item"><div class="invest-item-label">Break-even</div><div class="invest-item-val blue">${payback!=null?fmtM(payback):"n.v.t."}</div></div>
     </div>
     <div class="aannames">
-      <strong style="color:#666">Aannames:</strong> Oplossingspercentage ${Math.round(r.reductie*100)}% · ROI-projectie 3 jaar · Geen interne trainingskosten · Besparingen constant over 3 jaar
+      <strong style="color:#555">Aannames:</strong> Oplossingspercentage ${Math.round(r.reductie*100)}% · ROI-projectie 3 jaar · Geen interne trainingskosten · Besparingen constant over 3 jaar
     </div>`);
 }
 
@@ -307,64 +302,127 @@ function generatePDF(){
       const doc=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
       const r=state.result, d=state.data, naam=d.bedrijfsnaam||"Klant";
       const W=210, mg=16;
-      doc.setFillColor(10,10,10); doc.rect(0,0,W,26,"F");
-      doc.setFont("helvetica","bold"); doc.setFontSize(15); doc.setTextColor(91,91,214); doc.text("AZIRI",mg,17);
-      doc.setFontSize(7.5); doc.setTextColor(110,110,110); doc.text("ROI Calculator · 3-jaars projectie",mg+28,17);
-      doc.setFont("helvetica","normal"); doc.text(new Date().toLocaleDateString("nl-BE"),W-mg,17,{align:"right"});
-      let y=35;
-      doc.setFont("helvetica","bold"); doc.setFontSize(14); doc.setTextColor(20,20,20); doc.text(naam,mg,y); y+=4.5;
-      doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(130,130,130); doc.text([d.sector,d.contactpersoon].filter(Boolean).join(" · "),mg,y); y+=8;
-      doc.setFillColor(238,238,255); doc.roundedRect(mg,y,W-mg*2,10,2,2,"F");
-      doc.setFontSize(7.5); doc.setTextColor(91,91,214);
-      doc.text(`Oplossingspercentage: ${Math.round(r.reductie*100)}% — geen enkele software lost alles 100% op.`,mg+5,y+6.5); y+=16;
+      const today=new Date().toLocaleDateString("nl-BE");
+
+      // ── Header: wit met paarse lijn, hippo emoji ──
+      doc.setFillColor(255,255,255); doc.rect(0,0,W,28,"F");
+      doc.setFillColor(91,91,214); doc.rect(0,25,W,3,"F");
+      // Hippo blok
+      doc.setFillColor(91,91,214); doc.roundedRect(mg,6,16,16,3,3,"F");
+      doc.setFontSize(10); doc.setTextColor(255,255,255); doc.text("🦛",mg+3,17);
+      // Brand
+      doc.setFont("helvetica","bold"); doc.setFontSize(13); doc.setTextColor(91,91,214);
+      doc.text("AZIRI",mg+20,13);
+      doc.setFont("helvetica","normal"); doc.setFontSize(7); doc.setTextColor(156,163,175);
+      doc.text("ROI Calculator · 3-jaars projectie",mg+20,19);
+      doc.text(today,W-mg,13,{align:"right"});
+
+      let y=36;
+
+      // ── Vertrouwelijk banner ──
+      doc.setFillColor(254,243,199); doc.roundedRect(mg,y,W-mg*2,10,2,2,"F");
+      doc.setDrawColor(252,211,77); doc.setLineWidth(0.3); doc.roundedRect(mg,y,W-mg*2,10,2,2,"S");
+      doc.setFont("helvetica","bold"); doc.setFontSize(7.5); doc.setTextColor(120,53,15);
+      doc.text("🔒 Vertrouwelijk",mg+4,y+6.5);
+      doc.setFont("helvetica","normal"); doc.setTextColor(146,64,14);
+      doc.text("— Uitsluitend bestemd voor de ontvanger. Verspreiding zonder toestemming van Aziri is niet toegestaan.",mg+34,y+6.5);
+      y+=16;
+
+      // ── Klant ──
+      doc.setFont("helvetica","bold"); doc.setFontSize(14); doc.setTextColor(17,24,39); doc.text(naam,mg,y); y+=5;
+      doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(156,163,175);
+      doc.text([d.sector,d.contactpersoon].filter(Boolean).join(" · ")+" · Opgesteld op "+today,mg,y); y+=7;
+
+      // ── Oplossingspercentage badge ──
+      doc.setFillColor(238,238,255); doc.roundedRect(mg,y,W-mg*2,9,2,2,"F");
+      doc.setFont("helvetica","normal"); doc.setFontSize(7.5); doc.setTextColor(91,91,214);
+      doc.text(`Oplossingspercentage: ${Math.round(r.reductie*100)}% — geen enkele software lost alles 100% op.`,mg+5,y+6);
+      y+=15;
+
+      // ── KPI's ──
       const kw=(W-mg*2-8)/3, payback=r.breakEvenMaanden;
       [{l:"Terugverdientijd",v:payback!=null?fmtM(payback):"—",a:true},{l:"Netto winst jaar 1",v:fmt(r.nettoWinstJaar1),a:false},{l:"ROI over 3 jaar",v:r.roi3Jaar!=null?fmtPct(r.roi3Jaar):"—",a:false}].forEach((k,i)=>{
         const x=mg+i*(kw+4);
-        if(k.a) doc.setFillColor(238,238,255); else doc.setFillColor(247,247,250);
-        doc.roundedRect(x,y,kw,18,2,2,"F");
-        doc.setFontSize(6); doc.setFont("helvetica","normal"); doc.setTextColor(100,100,110); doc.text(k.l.toUpperCase(),x+5,y+6.5);
-        doc.setFontSize(10.5); doc.setFont("helvetica","bold"); doc.setTextColor(91,91,214); doc.text(k.v,x+5,y+13.5);
+        if(k.a){doc.setFillColor(238,238,255);doc.setDrawColor(91,91,214);doc.setLineWidth(0.5);}
+        else{doc.setFillColor(249,250,251);doc.setDrawColor(226,228,233);doc.setLineWidth(0.3);}
+        doc.roundedRect(x,y,kw,18,2,2,"FD");
+        doc.setFontSize(6); doc.setFont("helvetica","bold"); doc.setTextColor(156,163,175);
+        doc.text(k.l.toUpperCase(),x+5,y+6.5);
+        doc.setFontSize(11); doc.setFont("helvetica","bold"); doc.setTextColor(91,91,214);
+        doc.text(k.v,x+5,y+13.5);
       }); y+=24;
+
+      // ── Twee tabellen: huidige situatie + besparing ──
       const tw=(W-mg*2-8)/2;
       const lR=[["Operationeel tijdverlies",fmt(r.tijdverliesMaand)],["Niet-gefactureerde prestaties",fmt(r.nietGefMaand)],["Administratieve druk",fmt(r.adminMaand)],["Totaal / maand",fmt(r.totaalHuidigMaand)]];
       const rR=[["Tijdverlies (na correctie)",fmt(r.bespTijdverliesJaar)],["Omzet gerecupereerd",fmt(r.bespOmzetJaar)],["Admin (na correctie)",fmt(r.bespAdminJaar)],["Totale jaarlijkse besparing",fmt(r.totaleJaarlijkseBesparing)]];
+
       doc.setFont("helvetica","bold"); doc.setFontSize(7.5); doc.setTextColor(40,40,40);
-      doc.text("Huidige situatie / maand",mg,y); doc.text(`Bruto besparing / jaar (${Math.round(r.reductie*100)}%)`,mg+tw+8,y); y+=3;
+      doc.text("Huidige situatie / maand",mg,y);
+      doc.text(`Bruto besparing / jaar (${Math.round(r.reductie*100)}%)`,mg+tw+8,y); y+=3;
       doc.setDrawColor(200); doc.setLineWidth(0.3); doc.line(mg,y,mg+tw,y); doc.line(mg+tw+8,y,mg+tw+8+tw,y); y+=5;
       let ly=y, ry=y;
-      lR.forEach((row,ri)=>{const isT=ri===lR.length-1; doc.setFont("helvetica",isT?"bold":"normal"); doc.setFontSize(8); doc.setTextColor(isT?91:70,isT?91:70,isT?214:70); doc.text(row[0],mg,ly); doc.text(row[1],mg+tw,ly,{align:"right"}); ly+=6; if(!isT){doc.setDrawColor(230);doc.setLineWidth(0.1);doc.line(mg,ly-1.5,mg+tw,ly-1.5);}});
-      rR.forEach((row,ri)=>{const isT=ri===rR.length-1; doc.setFont("helvetica",isT?"bold":"normal"); doc.setFontSize(8); doc.setTextColor(isT?91:70,isT?91:70,isT?214:70); doc.text(row[0],mg+tw+8,ry); doc.text(row[1],W-mg,ry,{align:"right"}); ry+=6; if(!isT){doc.setDrawColor(230);doc.setLineWidth(0.1);doc.line(mg+tw+8,ry-1.5,W-mg,ry-1.5);}});
+      lR.forEach((row,ri)=>{const isT=ri===lR.length-1; doc.setFont("helvetica",isT?"bold":"normal"); doc.setFontSize(8); doc.setTextColor(isT?91:70,isT?91:70,isT?214:70); doc.text(row[0],mg,ly); doc.text(row[1],mg+tw,ly,{align:"right"}); ly+=6; if(!isT){doc.setDrawColor(243,244,246);doc.setLineWidth(0.1);doc.line(mg,ly-1.5,mg+tw,ly-1.5);}});
+      rR.forEach((row,ri)=>{const isT=ri===rR.length-1; doc.setFont("helvetica",isT?"bold":"normal"); doc.setFontSize(8); doc.setTextColor(isT?91:70,isT?91:70,isT?214:70); doc.text(row[0],mg+tw+8,ry); doc.text(row[1],W-mg,ry,{align:"right"}); ry+=6; if(!isT){doc.setDrawColor(243,244,246);doc.setLineWidth(0.1);doc.line(mg+tw+8,ry-1.5,W-mg,ry-1.5);}});
       y=Math.max(ly,ry)+8;
-      doc.setFont("helvetica","bold"); doc.setFontSize(7.5); doc.setTextColor(40,40,40); doc.text("Projectie over 3 jaar",mg,y); y+=4;
-      doc.setDrawColor(200); doc.setLineWidth(0.3); doc.line(mg,y,W-mg,y); y+=5;
-      const cW=(W-mg*2)/4;
-      doc.setFontSize(7); doc.setFont("helvetica","normal"); doc.setTextColor(110,110,110);
-      doc.text("Jaar 1",mg+cW,y,{align:"right"}); doc.text("Jaar 2",mg+cW*2,y,{align:"right"}); doc.text("Jaar 3",mg+cW*3,y,{align:"right"}); y+=5;
-      doc.setFontSize(8); doc.setTextColor(70,70,70);
-      doc.text("Kosten",mg,y); doc.text(fmt(r.kostenJaar1),mg+cW,y,{align:"right"}); doc.text(fmt(r.kostenJaar2),mg+cW*2,y,{align:"right"}); doc.text(fmt(r.kostenJaar3),mg+cW*3,y,{align:"right"}); y+=6;
+
+      // ── Projectie over 3 jaar ──
+      doc.setFillColor(249,250,251); doc.setDrawColor(226,228,233); doc.setLineWidth(0.3);
+      doc.roundedRect(mg,y,W-mg*2,38,2,2,"FD");
+      doc.setFont("helvetica","bold"); doc.setFontSize(7); doc.setTextColor(91,91,214);
+      doc.text("PROJECTIE OVER 3 JAAR",mg+5,y+6); y+=9;
+      const cW=(W-mg*2-10)/4;
+      doc.setFontSize(7); doc.setFont("helvetica","bold"); doc.setTextColor(156,163,175);
+      doc.text("",mg+5,y); doc.text("Jaar 1",mg+5+cW,y,{align:"right"}); doc.text("Jaar 2",mg+5+cW*2,y,{align:"right"}); doc.text("Jaar 3",mg+5+cW*3,y,{align:"right"}); y+=5;
+      doc.setDrawColor(226,228,233); doc.setLineWidth(0.2); doc.line(mg+3,y,W-mg-3,y); y+=4;
+      doc.setFontSize(8); doc.setFont("helvetica","normal"); doc.setTextColor(107,114,128);
+      doc.text("Kosten",mg+5,y); doc.text(fmt(r.kostenJaar1),mg+5+cW,y,{align:"right"}); doc.text(fmt(r.kostenJaar2),mg+5+cW*2,y,{align:"right"}); doc.text(fmt(r.kostenJaar3),mg+5+cW*3,y,{align:"right"}); y+=6;
       doc.setTextColor(5,150,105);
-      doc.text("Besparing",mg,y); doc.text(fmt(r.totaleJaarlijkseBesparing),mg+cW,y,{align:"right"}); doc.text(fmt(r.totaleJaarlijkseBesparing),mg+cW*2,y,{align:"right"}); doc.text(fmt(r.totaleJaarlijkseBesparing),mg+cW*3,y,{align:"right"}); y+=6;
+      doc.text("Besparing",mg+5,y); doc.text(fmt(r.totaleJaarlijkseBesparing),mg+5+cW,y,{align:"right"}); doc.text(fmt(r.totaleJaarlijkseBesparing),mg+5+cW*2,y,{align:"right"}); doc.text(fmt(r.totaleJaarlijkseBesparing),mg+5+cW*3,y,{align:"right"}); y+=6;
       doc.setFont("helvetica","bold"); doc.setTextColor(91,91,214);
-      doc.text("Netto",mg,y); doc.text(fmt(r.nettoWinstJaar1),mg+cW,y,{align:"right"}); doc.text(fmt(r.nettoWinstJaarNa1),mg+cW*2,y,{align:"right"}); doc.text(fmt(r.nettoWinstJaarNa1),mg+cW*3,y,{align:"right"}); y+=10;
-      doc.setFont("helvetica","bold"); doc.setFontSize(7.5); doc.setTextColor(40,40,40); doc.text("Netto winst per jaar",mg,y); y+=4;
-      doc.setDrawColor(200); doc.setLineWidth(0.3); doc.line(mg,y,W-mg,y); y+=5;
-      [["Jaar 1",fmt(r.nettoWinstJaar1)],["Jaar 2",fmt(r.nettoWinstJaarNa1)],["Jaar 3",fmt(r.nettoWinstJaarNa1)],["Totaal 3 jaar",fmt(r.totaleBesparing3Jaar-r.totaleKosten3Jaar)]].forEach((row,ri)=>{
-        const isT=ri===3; doc.setFont("helvetica",isT?"bold":"normal"); doc.setFontSize(8); doc.setTextColor(isT?91:70,isT?91:70,isT?214:70);
-        doc.text(row[0],mg,y); doc.text(row[1],W-mg,y,{align:"right"}); y+=6;
-        if(!isT){doc.setDrawColor(230);doc.setLineWidth(0.1);doc.line(mg,y-1.5,W-mg,y-1.5);}
-      }); y+=6;
-      doc.setFillColor(245,245,250); doc.roundedRect(mg,y,W-mg*2,18,2,2,"F");
+      doc.text("Netto",mg+5,y); doc.text(fmt(r.nettoWinstJaar1),mg+5+cW,y,{align:"right"}); doc.text(fmt(r.nettoWinstJaarNa1),mg+5+cW*2,y,{align:"right"}); doc.text(fmt(r.nettoWinstJaarNa1),mg+5+cW*3,y,{align:"right"}); y+=6;
+      doc.setFont("helvetica","normal"); doc.setFontSize(7); doc.setTextColor(156,163,175);
+      doc.text("Cumulatief netto",mg+5,y); doc.text(fmt(r.nettoWinstJaar1),mg+5+cW,y,{align:"right"}); doc.text(fmt(r.nettoWinstJaar1+r.nettoWinstJaarNa1),mg+5+cW*2,y,{align:"right"}); doc.text(fmt(r.totaleBesparing3Jaar-r.totaleKosten3Jaar),mg+5+cW*3,y,{align:"right"});
+      y+=14;
+
+      // ── Netto winst tabel + kosten tabel ──
+      const tw2=(W-mg*2-8)/2;
+      doc.setFont("helvetica","bold"); doc.setFontSize(7.5); doc.setTextColor(40,40,40);
+      doc.text("Kosten per jaar",mg,y); doc.text("Netto winst per jaar",mg+tw2+8,y); y+=3;
+      doc.setDrawColor(200); doc.setLineWidth(0.3); doc.line(mg,y,mg+tw2,y); doc.line(mg+tw2+8,y,mg+tw2+8+tw2,y); y+=5;
+      const kRows=[["Jaar 1 (ontwikkeling+licentie)",fmt(r.kostenJaar1)],["Jaar 2 (licentie)",fmt(r.kostenJaar2)],["Jaar 3 (licentie)",fmt(r.kostenJaar3)],["Totaal 3 jaar",fmt(r.totaleKosten3Jaar)]];
+      const nRows=[["Jaar 1",fmt(r.nettoWinstJaar1)],["Jaar 2",fmt(r.nettoWinstJaarNa1)],["Jaar 3",fmt(r.nettoWinstJaarNa1)],["Totaal 3 jaar",fmt(r.totaleBesparing3Jaar-r.totaleKosten3Jaar)]];
+      let ky=y, ny=y;
+      kRows.forEach((row,ri)=>{const isT=ri===3; doc.setFont("helvetica",isT?"bold":"normal"); doc.setFontSize(8); doc.setTextColor(isT?91:70,isT?91:70,isT?214:70); doc.text(row[0],mg,ky); doc.text(row[1],mg+tw2,ky,{align:"right"}); ky+=6; if(!isT){doc.setDrawColor(243,244,246);doc.setLineWidth(0.1);doc.line(mg,ky-1.5,mg+tw2,ky-1.5);}});
+      nRows.forEach((row,ri)=>{const isT=ri===3; doc.setFont("helvetica",isT?"bold":"normal"); doc.setFontSize(8); doc.setTextColor(isT?91:70,isT?91:70,isT?214:70); doc.text(row[0],mg+tw2+8,ny); doc.text(row[1],W-mg,ny,{align:"right"}); ny+=6; if(!isT){doc.setDrawColor(243,244,246);doc.setLineWidth(0.1);doc.line(mg+tw2+8,ny-1.5,W-mg,ny-1.5);}});
+      y=Math.max(ky,ny)+8;
+
+      // ── Investering samenvatting ──
+      doc.setFillColor(238,238,255); doc.setDrawColor(91,91,214); doc.setLineWidth(0.5);
+      doc.roundedRect(mg,y,W-mg*2,17,2,2,"FD");
       doc.setFont("helvetica","bold"); doc.setFontSize(6.5); doc.setTextColor(91,91,214); doc.text("INVESTERING & SAMENVATTING",mg+5,y+6);
-      doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(80,80,80);
-      doc.text(`Ontwikkeling: ${fmt(r.eenmalig)}`,mg+5,y+13); doc.text(`Licentie/jaar: ${fmt(r.licentie)}`,mg+72,y+13);
+      doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(75,85,99);
+      doc.text(`Ontwikkeling: ${fmt(r.eenmalig)}`,mg+5,y+12.5);
+      doc.text(`Licentie/jaar: ${fmt(r.licentie)}`,mg+66,y+12.5);
       doc.setFont("helvetica","bold"); doc.setTextColor(91,91,214);
-      doc.text(`Break-even: ${payback!=null?fmtM(payback):"n.v.t."}  |  ROI 3j: ${r.roi3Jaar!=null?fmtPct(r.roi3Jaar):"—"}`,mg+125,y+13); y+=26;
-      doc.setFont("helvetica","normal"); doc.setFontSize(7); doc.setTextColor(150,150,150);
-      doc.text(`Aannames: oplossingspercentage ${Math.round(r.reductie*100)}% · projectie 3 jaar · geen interne trainingskosten · besparingen constant`,mg,y); y+=7;
-      doc.setDrawColor(210); doc.setLineWidth(0.3); doc.line(mg,y,W-mg,y); y+=5;
-      doc.setFontSize(7); doc.setTextColor(180,180,180);
-      doc.text("Gegenereerd via Aziri ROI Calculator · aziri.be",mg,y);
-      doc.text(`ROI_${naam}_Aziri`,W-mg,y,{align:"right"});
+      doc.text(`Break-even: ${payback!=null?fmtM(payback):"n.v.t."}  |  ROI 3j: ${r.roi3Jaar!=null?fmtPct(r.roi3Jaar):"—"}`,mg+118,y+12.5);
+      y+=24;
+
+      // ── Aannames ──
+      doc.setFont("helvetica","normal"); doc.setFontSize(7); doc.setTextColor(156,163,175);
+      doc.text(`Aannames: oplossingspercentage ${Math.round(r.reductie*100)}% · projectie 3 jaar · geen interne trainingskosten · besparingen constant`,mg,y);
+      y+=7;
+
+      // ── Footer: paarse lijn + vertrouwelijk + branding ──
+      doc.setFillColor(91,91,214); doc.rect(0,y,W,2,"F"); y+=4;
+      doc.setFillColor(254,243,199); doc.roundedRect(mg,y,tw,9,2,2,"F");
+      doc.setFont("helvetica","bold"); doc.setFontSize(7); doc.setTextColor(120,53,15);
+      doc.text("🔒 Vertrouwelijk — Uitsluitend voor de ontvanger. Niet verspreiden zonder toestemming Aziri.",mg+3,y+6);
+      doc.setFont("helvetica","bold"); doc.setFontSize(10); doc.setTextColor(91,91,214);
+      doc.text("AZIRI",W-mg,y+5,{align:"right"});
+      doc.setFont("helvetica","normal"); doc.setFontSize(7); doc.setTextColor(156,163,175);
+      doc.text("aziri.eu · ROI_"+naam+"_Aziri",W-mg,y+10,{align:"right"});
+
       doc.save(`ROI_${naam}_Aziri.pdf`);
       set("pdf-msg",`<p class="success">✓ PDF opgeslagen: ROI_${naam}_Aziri.pdf</p>`);
     }catch(e){set("pdf-msg",`<div class="error">PDF-fout: ${e.message}</div>`);}
