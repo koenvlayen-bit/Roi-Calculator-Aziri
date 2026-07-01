@@ -6,38 +6,42 @@
   <title>Aziri ROI Calculator</title>
   <link rel="stylesheet" href="css/style.css" />
   <link rel="icon" href="hippo.png" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  <script src="js/hippo.js"></script>
   <style>
+    /* ── Single page layout ── */
     .sp-wrap { display: grid; grid-template-columns: 1fr 260px; min-height: calc(100vh - 57px); }
     .sp-form { padding: 28px 32px 60px; overflow-y: auto; }
-    .sp-result { background: #F8F9FB; border-left: 1px solid var(--border); padding: 20px 18px; position: sticky; top: 57px; height: calc(100vh - 57px); overflow-y: auto; }
-    .sp-section { margin-bottom: 28px; }
+    .sp-sidebar { background: #F8F9FB; border-left: 1px solid var(--border); padding: 20px 18px; position: sticky; top: 57px; height: calc(100vh - 57px); overflow-y: auto; }
+    .sp-section { margin-bottom: 26px; }
     .sp-section-title { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--aziri); font-weight: 700; margin-bottom: 4px; }
-    .sp-section-desc { font-size: 12px; color: var(--text-dim); margin-bottom: 14px; line-height: 1.5; }
-    .sp-divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    .sp-section-desc { font-size: 12px; color: var(--text-dim); margin-bottom: 12px; line-height: 1.5; }
+    .sp-divider { border: none; border-top: 1px solid var(--border); margin: 22px 0; }
     .sp-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
     .sp-field { display: flex; flex-direction: column; gap: 5px; }
     .sp-field label { font-size: 12px; font-weight: 600; color: var(--text); }
     .sp-field input, .sp-field select { font-size: 14px; padding: 8px 11px; border-radius: var(--radius-sm); border: 1.5px solid var(--border-mid); background: #fff; color: var(--text); width: 100%; transition: border-color 0.15s; }
     .sp-field input:focus, .sp-field select:focus { outline: none; border-color: var(--aziri); box-shadow: 0 0 0 3px rgba(91,91,214,0.1); }
     .sp-field .hint { font-size: 11px; color: var(--text-dim); }
-    .toggle-ja { display: flex; gap: 8px; }
-    .toggle-ja-btn { flex: 1; padding: 9px 0; border: 1.5px solid var(--border-mid); border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; text-align: center; background: #fff; transition: all 0.15s; }
-    .toggle-ja-btn.active { background: var(--aziri-light); border-color: var(--aziri); color: var(--aziri); }
+    .tgl { display: flex; gap: 8px; }
+    .tgl-btn { flex: 1; padding: 9px 0; border: 1.5px solid var(--border-mid); border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; text-align: center; background: #fff; transition: all 0.15s; }
+    .tgl-btn.active { background: var(--aziri-light); border-color: var(--aziri); color: var(--aziri); }
     .slider-wrap { padding: 14px 18px; background: #fff; border: 1.5px solid var(--aziri); border-radius: var(--radius); }
     .slider-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
     .slider-title { font-size: 13px; font-weight: 700; color: var(--text); }
-    .slider-pct { background: var(--aziri); color: #fff; font-size: 16px; font-weight: 700; padding: 5px 14px; border-radius: 7px; }
-    .slider { width: 100%; height: 6px; -webkit-appearance: none; appearance: none; border-radius: 3px; background: linear-gradient(to right, var(--aziri) 100%, var(--border-mid) 100%); outline: none; margin-bottom: 4px; cursor: pointer; }
+    .slider-pct { background: var(--aziri); color: #fff; font-size: 16px; font-weight: 700; padding: 5px 14px; border-radius: 7px; min-width: 60px; text-align: center; }
+    .slider { width: 100%; height: 6px; -webkit-appearance: none; appearance: none; border-radius: 3px; outline: none; margin-bottom: 4px; cursor: pointer; }
     .slider::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--aziri); border: 2px solid #fff; box-shadow: 0 2px 6px rgba(91,91,214,0.3); cursor: pointer; }
+    .slider::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: var(--aziri); cursor: pointer; border: 2px solid #fff; }
     .slider-ticks { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-dim); }
     .btn-calculate { width: 100%; padding: 14px; font-size: 15px; font-weight: 700; background: var(--aziri); color: #fff; border: none; border-radius: var(--radius-sm); cursor: pointer; transition: background 0.15s, transform 0.1s; margin-top: 4px; display: flex; align-items: center; justify-content: center; gap: 10px; }
     .btn-calculate:hover { background: var(--aziri-dark); }
     .btn-calculate:active { transform: scale(0.98); }
-    /* Live result sidebar */
+    /* Sidebar preview */
     .rv-label { font-size: 9px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-dim); font-weight: 600; margin-bottom: 3px; }
     .rv-val { font-size: 18px; font-weight: 700; color: var(--aziri); margin-bottom: 12px; }
     .rv-val.green { color: var(--green); }
-    .rv-val.amber { color: var(--amber); }
     .rv-section { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-dim); font-weight: 600; border-top: 1px solid var(--border); padding-top: 10px; margin: 10px 0 8px; }
     .rv-row { display: flex; justify-content: space-between; font-size: 11px; padding: 3px 0; border-bottom: 1px solid #eee; color: var(--text-muted); }
     .rv-row span:last-child { font-weight: 600; color: var(--text); }
@@ -46,164 +50,244 @@
     .rv-row.tot { font-weight: 700; border-bottom: none; }
     .rv-row.tot span:last-child { color: var(--aziri); }
     .rv-empty { font-size: 12px; color: var(--text-dim); text-align: center; padding: 24px 0; line-height: 1.6; }
-    @media (max-width: 680px) { .sp-wrap { grid-template-columns: 1fr; } .sp-result { display: none; } }
+    /* Result screen */
+    .result-screen { display: none; padding: 28px 32px 60px; max-width: 780px; margin: 0 auto; }
+    .result-screen.visible { display: block; }
+    /* Odometer */
+    .kpi-value { transition: none; }
+    @media (max-width: 680px) { .sp-wrap { grid-template-columns: 1fr; } .sp-sidebar { display: none; } }
   </style>
 </head>
 <body>
   <header class="header">
     <div class="header-left">
-      <div class="header-hippo"><img src="hippo.png" alt="Aziri" style="width:28px;height:28px;object-fit:contain;cursor:pointer" id="hippo-logo" onclick="easterEgg()" /></div>
+      <div class="header-hippo">
+        <img src="hippo.png" alt="Aziri" id="hippo-logo" style="width:28px;height:28px;object-fit:contain;cursor:pointer" onclick="easterEgg()" />
+      </div>
       <div class="header-brand">
         <span class="logo-text">AZIRI</span>
-        <span class="header-sub">ROI Calculator</span>
+        <span class="header-sub" id="header-sub">ROI Calculator</span>
       </div>
     </div>
     <div class="confidential-badge">🔒 Vertrouwelijk document</div>
   </header>
 
-  <div class="sp-wrap">
-    <div class="sp-form">
+  <!-- ── INTAKE ── -->
+  <div id="intake-view">
+    <div class="sp-wrap">
+      <div class="sp-form">
 
-      <div class="sp-section">
-        <div class="sp-section-title">Klantinfo</div>
-        <div class="sp-field-row">
-          <div class="sp-field"><label>Bedrijfsnaam *</label><input type="text" id="bedrijfsnaam" oninput="liveCalc()"></div>
-          <div class="sp-field"><label>Sector <span style="font-weight:400;color:var(--text-dim)">(bepaalt terminologie)</span></label>
-            <select id="sector" onchange="liveCalc()">
-              <option value="">— Kies sector —</option>
-              <option value="Afvalverwerking">Afvalverwerking</option>
-              <option value="Bouw">Bouw</option>
-              <option value="Consultancy">Consultancy</option>
-              <option value="Financieel">Financieel</option>
-              <option value="Gezondheidszorg">Gezondheidszorg</option>
-              <option value="Groot & Detailhandel">Groot & Detailhandel</option>
-              <option value="Horeca">Horeca</option>
-              <option value="HR Diensten">HR Diensten</option>
-              <option value="Huisvestiging">Huisvestiging</option>
-              <option value="Installatie">Installatie</option>
-              <option value="Overheidsinstelling">Overheidsinstelling</option>
-              <option value="Productie">Productie</option>
-              <option value="Telecom">Telecom</option>
-              <option value="Transport & Logistiek">Transport & Logistiek</option>
-              <option value="Verhuur">Verhuur</option>
-              <option value="Voeding">Voeding</option>
-              <option value="Overige">Overige</option>
-            </select>
+        <div class="sp-section">
+          <div class="sp-section-title">Klantinfo</div>
+          <div class="sp-field-row">
+            <div class="sp-field"><label>Bedrijfsnaam *</label><input type="text" id="bedrijfsnaam" oninput="liveCalc()"></div>
+            <div class="sp-field"><label>Sector <span style="font-weight:400;color:var(--text-dim)">(bepaalt terminologie)</span></label>
+              <select id="sector" onchange="liveCalc()">
+                <option value="">— Kies sector —</option>
+                <option value="Afvalverwerking">Afvalverwerking</option>
+                <option value="Bouw">Bouw</option>
+                <option value="Consultancy">Consultancy</option>
+                <option value="Financieel">Financieel</option>
+                <option value="Gezondheidszorg">Gezondheidszorg</option>
+                <option value="Groot & Detailhandel">Groot & Detailhandel</option>
+                <option value="Horeca">Horeca</option>
+                <option value="HR Diensten">HR Diensten</option>
+                <option value="Huisvestiging">Huisvestiging</option>
+                <option value="Installatie">Installatie</option>
+                <option value="Overheidsinstelling">Overheidsinstelling</option>
+                <option value="Productie">Productie</option>
+                <option value="Telecom">Telecom</option>
+                <option value="Transport & Logistiek">Transport & Logistiek</option>
+                <option value="Verhuur">Verhuur</option>
+                <option value="Voeding">Voeding</option>
+                <option value="Overige">Overige</option>
+              </select>
+            </div>
+          </div>
+          <div class="sp-field-row">
+            <div class="sp-field"><label>Contactpersoon <span style="font-weight:400;color:var(--text-dim)">(optioneel)</span></label><input type="text" id="contactpersoon"></div>
+            <div class="sp-field"><label>Naam coördinator <span style="font-weight:400;color:var(--text-dim)">(optioneel)</span></label><input type="text" id="naamCoordinator"></div>
           </div>
         </div>
-        <div class="sp-field-row">
-          <div class="sp-field"><label>Contactpersoon <span style="font-weight:400;color:var(--text-dim)">(optioneel)</span></label><input type="text" id="contactpersoon"></div>
-          <div class="sp-field"><label>Naam coördinator <span style="font-weight:400;color:var(--text-dim)">(optioneel)</span></label><input type="text" id="naamCoordinator"></div>
-        </div>
-      </div>
 
-      <hr class="sp-divider">
+        <hr class="sp-divider">
 
-      <div class="sp-section">
-        <div class="sp-section-title">Team & kostprijs</div>
-        <div class="sp-field-row">
-          <div class="sp-field"><label>Aantal operationele medewerkers</label><input type="number" id="aantalMedewerkers" min="1" oninput="liveCalc()"></div>
-          <div class="sp-field"><label>Kostprijs per uur (€)</label><input type="number" id="kostprijsPerUur" value="65" min="0" oninput="liveCalc()"><p class="hint">Incl. werkgeverslasten · standaard €65/u</p></div>
-        </div>
-      </div>
-
-      <hr class="sp-divider">
-
-      <div class="sp-section">
-        <div class="sp-section-title">Operationeel tijdverlies</div>
-        <div class="sp-section-desc">Bedrijfsniveau — totale incidenten voor het hele bedrijf, niet per medewerker.</div>
-        <div class="sp-field-row">
-          <div class="sp-field"><label>Mensen per incident</label><input type="number" id="aantalMensen" min="1" oninput="liveCalc()"></div>
-          <div class="sp-field"><label>Duur per incident (minuten)</label><input type="number" id="duurMinuten" min="1" oninput="liveCalc()"></div>
-        </div>
-        <div class="sp-field"><label>Hoe vaak per week? (bedrijfsbreed)</label><input type="number" id="frequentie" min="0" step="0.5" oninput="liveCalc()" style="max-width:180px"><p class="hint">De berekening vermenigvuldigt automatisch met betrokken mensen en duur.</p></div>
-      </div>
-
-      <hr class="sp-divider">
-
-      <div class="sp-section">
-        <div class="sp-section-title">Niet-gefactureerde prestaties</div>
-        <div class="sp-section-desc">Materialen, uren of diensten die niet altijd gefactureerd worden.</div>
-        <div class="toggle-ja" style="margin-bottom:12px">
-          <div class="toggle-ja-btn" id="btn-nee" onclick="toggleNG(false)">Nee</div>
-          <div class="toggle-ja-btn" id="btn-ja" onclick="toggleNG(true)">Ja</div>
-        </div>
-        <div id="ng-veld" style="display:none">
-          <div class="sp-field"><label>Geschat maandelijks niet-gefactureerd bedrag (€)</label><input type="number" id="nietGefMaand" min="0" oninput="liveCalc()" style="max-width:220px"></div>
-        </div>
-      </div>
-
-      <hr class="sp-divider">
-
-      <div class="sp-section">
-        <div class="sp-section-title">Administratieve druk</div>
-        <div class="sp-field-row">
-          <div class="sp-field"><label>Uren manuele admin per week</label><input type="number" id="adminUren" min="0" step="0.5" oninput="liveCalc()"></div>
-          <div class="sp-field"><label>Kostprijs coördinator (€/u)</label><input type="number" id="kostCoord" min="0" oninput="liveCalc()"><p class="hint">Standaard: teamgemiddelde</p></div>
-        </div>
-      </div>
-
-      <hr class="sp-divider">
-
-      <div class="sp-section">
-        <div class="sp-section-title">Investering</div>
-        <div class="sp-field-row">
-          <div class="sp-field"><label>Eenmalige ontwikkelingskosten (€)</label><input type="number" id="eenmalig" min="0" oninput="liveCalc()"></div>
-          <div class="sp-field"><label>Jaarlijkse licentiekosten (€)</label><input type="number" id="licentie" min="0" oninput="liveCalc()"></div>
-        </div>
-      </div>
-
-      <hr class="sp-divider">
-
-      <div class="sp-section">
-        <div class="slider-wrap">
-          <div class="slider-row">
-            <div><div class="slider-title">Oplossingspercentage</div><div style="font-size:11px;color:var(--text-dim);margin-top:2px">Geen software lost alles 100% op</div></div>
-            <div class="slider-pct" id="pct-badge">100%</div>
+        <div class="sp-section">
+          <div class="sp-section-title">Team & kostprijs</div>
+          <div class="sp-field-row">
+            <div class="sp-field"><label>Aantal operationele medewerkers</label><input type="number" id="aantalMedewerkers" min="1" oninput="liveCalc()"></div>
+            <div class="sp-field"><label>Kostprijs per uur (€)</label><input type="number" id="kostprijsPerUur" value="65" min="0" oninput="liveCalc()"><p class="hint">Incl. werkgeverslasten · standaard €65/u</p></div>
           </div>
-          <input type="range" class="slider" id="reductie" min="50" max="100" step="5" value="100"
-            oninput="document.getElementById('pct-badge').textContent=this.value+'%';updateSliderBg(this);liveCalc()">
-          <div class="slider-ticks"><span>50%</span><span>60%</span><span>70%</span><span>80%</span><span>90%</span><span>100%</span></div>
         </div>
+
+        <hr class="sp-divider">
+
+        <div class="sp-section">
+          <div class="sp-section-title">Operationeel tijdverlies</div>
+          <div class="sp-section-desc">Bedrijfsniveau — totale incidenten voor het hele bedrijf, niet per medewerker.</div>
+          <div class="sp-field-row">
+            <div class="sp-field"><label>Mensen per incident</label><input type="number" id="aantalMensen" min="1" oninput="liveCalc()"></div>
+            <div class="sp-field"><label>Duur per incident (minuten)</label><input type="number" id="duurMinuten" min="1" oninput="liveCalc()"></div>
+          </div>
+          <div class="sp-field"><label>Hoe vaak per week? (bedrijfsbreed)</label>
+            <input type="number" id="frequentie" min="0" step="0.5" oninput="liveCalc()" style="max-width:180px">
+            <p class="hint">De berekening vermenigvuldigt automatisch met betrokken mensen en duur.</p>
+          </div>
+        </div>
+
+        <hr class="sp-divider">
+
+        <div class="sp-section">
+          <div class="sp-section-title">Niet-gefactureerde prestaties</div>
+          <div class="sp-section-desc">Materialen, uren of diensten die niet altijd gefactureerd worden.</div>
+          <div class="tgl" style="margin-bottom:12px">
+            <div class="tgl-btn active" id="btn-nee" onclick="toggleNG(false)">Nee</div>
+            <div class="tgl-btn" id="btn-ja" onclick="toggleNG(true)">Ja</div>
+          </div>
+          <div id="ng-veld" style="display:none">
+            <div class="sp-field"><label>Maandelijks niet-gefactureerd bedrag (€)</label><input type="number" id="nietGefMaand" min="0" oninput="liveCalc()" style="max-width:220px"></div>
+          </div>
+        </div>
+
+        <hr class="sp-divider">
+
+        <div class="sp-section">
+          <div class="sp-section-title">Administratieve druk</div>
+          <div class="sp-field-row">
+            <div class="sp-field"><label>Uren manuele admin per week</label><input type="number" id="adminUren" min="0" step="0.5" oninput="liveCalc()"></div>
+            <div class="sp-field"><label>Kostprijs coördinator (€/u)</label><input type="number" id="kostCoord" min="0" oninput="liveCalc()"><p class="hint">Standaard: teamgemiddelde</p></div>
+          </div>
+        </div>
+
+        <hr class="sp-divider">
+
+        <div class="sp-section">
+          <div class="sp-section-title">Investering</div>
+          <div class="sp-field-row">
+            <div class="sp-field"><label>Eenmalige ontwikkelingskosten (€)</label><input type="number" id="eenmalig" min="0" oninput="liveCalc()"></div>
+            <div class="sp-field"><label>Jaarlijkse licentiekosten (€)</label><input type="number" id="licentie" min="0" oninput="liveCalc()"></div>
+          </div>
+        </div>
+
+        <hr class="sp-divider">
+
+        <div class="sp-section">
+          <div class="slider-wrap">
+            <div class="slider-row">
+              <div>
+                <div class="slider-title">Oplossingspercentage</div>
+                <div style="font-size:11px;color:var(--text-dim);margin-top:2px">Geen software lost alles 100% op</div>
+              </div>
+              <div class="slider-pct" id="pct-badge">100%</div>
+            </div>
+            <input type="range" class="slider" id="reductie" min="50" max="100" step="5" value="100"
+              oninput="document.getElementById('pct-badge').textContent=this.value+'%';updateSliderBg(this);liveCalc()">
+            <div class="slider-ticks"><span>50%</span><span>60%</span><span>70%</span><span>80%</span><span>90%</span><span>100%</span></div>
+          </div>
+        </div>
+
+        <button class="btn-calculate" onclick="calculate()">
+          📊 &nbsp;Bereken ROI
+        </button>
+
+      </div><!-- /sp-form -->
+
+      <div class="sp-sidebar" id="live-sidebar">
+        <div class="rv-empty">Vul de gegevens in —<br>de preview verschijnt hier live.</div>
       </div>
+    </div>
+  </div><!-- /intake-view -->
 
-      <button class="btn-calculate" onclick="calculate()">
-        📊 &nbsp;Bereken ROI — open resultaat
-      </button>
+  <!-- ── RESULTAAT ── -->
+  <div class="result-screen" id="result-view">
+    <button class="btn-secondary" onclick="newCalc()" style="margin-bottom:24px">← Nieuwe berekening</button>
+    <span class="label">ROI Infofiche · 3-jaars projectie</span>
+    <h2 style="font-size:22px;font-weight:700;margin-bottom:4px" id="res-naam"></h2>
+    <p style="font-size:13px;color:var(--text-dim);margin-bottom:20px" id="res-meta"></p>
 
+    <div class="confidential-banner">
+      🔒 <span><strong>Vertrouwelijk</strong> — Dit document is uitsluitend bestemd voor de ontvanger. Verspreiding of gebruik door derden is niet toegestaan zonder schriftelijke toestemming van Aziri.</span>
     </div>
 
-    <div class="sp-result" id="live-result">
-      <div class="rv-empty">Vul de gegevens in —<br>de preview verschijnt hier live.</div>
+    <div class="kpi-grid">
+      <div class="kpi-card accent">
+        <div class="kpi-label">Terugverdientijd</div>
+        <div class="kpi-value" id="kpi-be">—</div>
+        <div class="kpi-sub">na eenmalige investering</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Netto winst jaar 1</div>
+        <div class="kpi-value green" id="kpi-netto">—</div>
+        <div class="kpi-sub">na ontwikkeling + licentie</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Cumulatieve ROI (3 jaar)</div>
+        <div class="kpi-value green" id="kpi-roi">—</div>
+        <div class="kpi-sub">rendement op investering</div>
+      </div>
     </div>
-  </div>
 
-  <script src="js/hippo.js"></script>
+    <div class="tables-grid">
+      <div class="card" style="margin:0"><span class="label">Huidige situatie / maand</span>
+        <table><thead><tr><th>Post</th><th>Bedrag</th></tr></thead>
+        <tbody id="tbl-huidig"></tbody></table>
+      </div>
+      <div class="card" style="margin:0">
+        <span class="label" id="lbl-besparing">Bruto besparing / jaar</span>
+        <table><thead><tr><th>Post</th><th>Besparing</th></tr></thead>
+        <tbody id="tbl-besparing"></tbody></table>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="label">Projectie over 3 jaar</span>
+      <table><thead><tr><th>Periode</th><th>Kosten</th><th>Besparing</th><th>Netto</th></tr></thead>
+      <tbody id="tbl-projectie"></tbody></table>
+    </div>
+
+    <div class="invest-block">
+      <div class="invest-item"><div class="invest-item-label">Eenmalige ontwikkeling</div><div class="invest-item-val" id="res-een"></div></div>
+      <div class="invest-item"><div class="invest-item-label">Licentie / jaar</div><div class="invest-item-val" id="res-lic"></div></div>
+      <div class="invest-item"><div class="invest-item-label">Break-even</div><div class="invest-item-val blue" id="res-be"></div></div>
+    </div>
+
+    <div class="aannames" id="res-aannames"></div>
+
+    <div class="action-row">
+      <button class="btn-primary" onclick="generatePDF()">⬇ &nbsp;Download PDF</button>
+      <button class="btn-secondary" onclick="newCalc()">Nieuwe berekening</button>
+    </div>
+    <div id="pdf-msg"></div>
+  </div><!-- /result-view -->
+
   <script>
     let ng = false;
+    let resultData = null;
+
+    // ── Helpers ──
+    const fmt = n => n == null || isNaN(n) ? '—' : '€\u00a0' + Math.round(n).toLocaleString('nl-BE').replace(/,/g,'.');
+    const fmtM = n => !n || isNaN(n) ? '—' : (Math.round(n*10)/10).toFixed(1).replace('.',',')+'\u00a0mnd';
+    const fmtPct = n => n == null || isNaN(n) ? '—' : (Math.round(n*10)/10).toFixed(1).replace('.',',')+'\u00a0%';
+    const v = id => parseFloat(document.getElementById(id).value) || 0;
+    const el = id => document.getElementById(id);
+
+    function updateSliderBg(input) {
+      const pct = (input.value - input.min) / (input.max - input.min) * 100;
+      input.style.background = `linear-gradient(to right, var(--aziri) ${pct}%, var(--border-mid) ${pct}%)`;
+    }
+    updateSliderBg(el('reductie'));
 
     function toggleNG(val) {
       ng = val;
-      document.getElementById('btn-ja').classList.toggle('active', val);
-      document.getElementById('btn-nee').classList.toggle('active', !val);
-      document.getElementById('ng-veld').style.display = val ? 'block' : 'none';
+      el('btn-ja').classList.toggle('active', val);
+      el('btn-nee').classList.toggle('active', !val);
+      el('ng-veld').style.display = val ? 'block' : 'none';
       liveCalc();
     }
-    toggleNG(false);
 
-    function updateSliderBg(el) {
-      const pct = (el.value - el.min) / (el.max - el.min) * 100;
-      el.style.background = `linear-gradient(to right, var(--aziri) ${pct}%, var(--border-mid) ${pct}%)`;
-    }
-    updateSliderBg(document.getElementById('reductie'));
-
-    function v(id) { return parseFloat(document.getElementById(id).value) || 0; }
-    function fmt(n) { return '€\u00a0' + Math.round(n).toLocaleString('nl-BE').replace(/,/g, '.'); }
-    function fmtM(n) { if (!n || isNaN(n)) return '—'; return (Math.round(n * 10) / 10).toFixed(1).replace('.', ',') + '\u00a0mnd'; }
-    function fmtPct(n) { return (Math.round(n * 10) / 10).toFixed(1).replace('.', ',') + '%'; }
-
-    function getData() {
-      const r = v('reductie') / 100 || 0.8;
+    // ── Berekeningen ──
+    function calc() {
+      const r = (v('reductie') || 100) / 100;
       const kMed = v('kostprijsPerUur') || 65;
       const kCoord = v('kostCoord') || kMed;
       const men = v('aantalMensen'), dur = v('duurMinuten'), fr = v('frequentie');
@@ -216,39 +300,37 @@
       const admMaand = admin * kCoord * 4.33;
       const totMaand = opMaand + admMaand + nietGef;
 
-      const bespOp = (verlUren * kMed * 52) * r;
+      const bespOp  = (verlUren * kMed * 52) * r;
       const bespAdm = (admin * kCoord * 52) * r;
       const bespOmz = (nietGef * 12) * r;
       const totJaar = bespOp + bespAdm + bespOmz;
 
       const k1 = een + lic, k2 = lic, k3 = lic;
-      const nettoJ1 = totJaar - k1;
+      const nettoJ1  = totJaar - k1;
       const nettoJna = totJaar - lic;
       const be = nettoJna > 0 ? k1 / (nettoJna / 12) : null;
-      const roi = (k1 + k2 + k3) > 0 ? ((totJaar * 3 - (k1 + k2 + k3)) / (k1 + k2 + k3)) * 100 : null;
+      const totKosten = k1 + k2 + k3;
+      const roi = totKosten > 0 ? ((totJaar * 3 - totKosten) / totKosten) * 100 : null;
+      const pct = Math.round(r * 100);
 
-      return { r, opMaand, admMaand, nietGef, totMaand, bespOp, bespAdm, bespOmz, totJaar, k1, k2, k3, nettoJ1, nettoJna, be, roi, een, lic, kMed, kCoord };
+      return { r, pct, opMaand, admMaand, nietGef, totMaand, bespOp, bespAdm, bespOmz, totJaar, k1, k2, k3, nettoJ1, nettoJna, be, roi, een, lic };
     }
 
+    // ── Live sidebar ──
     function liveCalc() {
-      const d = getData();
+      const d = calc();
       const hasData = d.totMaand > 0 || d.k1 > 0;
-      const el = document.getElementById('live-result');
-      if (!hasData) { el.innerHTML = '<div class="rv-empty">Vul de gegevens in —<br>de preview verschijnt hier live.</div>'; return; }
-
-      el.innerHTML = `
-        <div class="rv-label">Terugverdientijd</div>
-        <div class="rv-val">${d.be ? fmtM(d.be) : '—'}</div>
-        <div class="rv-label">Netto winst jaar 1</div>
-        <div class="rv-val ${d.nettoJ1 >= 0 ? 'green' : ''}">${fmt(d.nettoJ1)}</div>
-        <div class="rv-label">ROI over 3 jaar</div>
-        <div class="rv-val ${d.roi >= 0 ? 'green' : ''}">${d.roi != null ? fmtPct(d.roi) : '—'}</div>
+      if (!hasData) { el('live-sidebar').innerHTML = '<div class="rv-empty">Vul de gegevens in —<br>de preview verschijnt hier live.</div>'; return; }
+      el('live-sidebar').innerHTML = `
+        <div class="rv-label">Terugverdientijd</div><div class="rv-val">${fmtM(d.be)}</div>
+        <div class="rv-label">Netto winst jaar 1</div><div class="rv-val ${d.nettoJ1>=0?'green':''}">${fmt(d.nettoJ1)}</div>
+        <div class="rv-label">ROI over 3 jaar</div><div class="rv-val ${d.roi>0?'green':''}">${fmtPct(d.roi)}</div>
         <div class="rv-section">Tijdverlies / maand</div>
         <div class="rv-row"><span>Operationeel</span><span>${fmt(d.opMaand)}</span></div>
         <div class="rv-row"><span>Niet-gefactureerd</span><span>${fmt(d.nietGef)}</span></div>
         <div class="rv-row"><span>Administratief</span><span>${fmt(d.admMaand)}</span></div>
         <div class="rv-row tot"><span>Totaal</span><span>${fmt(d.totMaand)}</span></div>
-        <div class="rv-section">Besparing / jaar</div>
+        <div class="rv-section">Besparing / jaar (${d.pct}%)</div>
         <div class="rv-row pos"><span>Tijdverlies</span><span>${fmt(d.bespOp)}</span></div>
         <div class="rv-row pos"><span>Omzet</span><span>${fmt(d.bespOmz)}</span></div>
         <div class="rv-row pos"><span>Admin</span><span>${fmt(d.bespAdm)}</span></div>
@@ -257,7 +339,108 @@
         <div class="rv-section">Investering</div>
         <div class="rv-row"><span>Ontwikkeling</span><span>${fmt(d.een)}</span></div>
         <div class="rv-row"><span>Licentie/jaar</span><span>${fmt(d.lic)}</span></div>
-        <div class="rv-row tot"><span>Break-even</span><span>${d.be ? fmtM(d.be) : '—'}</span></div>`;
+        <div class="rv-row tot"><span>Break-even</span><span>${fmtM(d.be)}</span></div>`;
+    }
+
+    // ── Bereken & toon resultaat ──
+    function calculate() {
+      const naam = el('bedrijfsnaam').value.trim();
+      if (!naam) { alert('Vul de bedrijfsnaam in.'); return; }
+
+      const d = calc();
+      const today = new Date().toLocaleDateString('nl-BE');
+      const sector = el('sector').value;
+      const contact = el('contactpersoon').value;
+      const coord = el('naamCoordinator').value;
+      resultData = { ...d, naam, sector, contact, coord, today };
+
+      // Vul resultaat-scherm in
+      el('res-naam').textContent = naam;
+      el('res-meta').textContent = [sector, contact].filter(Boolean).join(' · ') + ' · Opgesteld op ' + today;
+      el('lbl-besparing').textContent = `Bruto besparing / jaar (${d.pct}% correctie)`;
+
+      el('tbl-huidig').innerHTML = `
+        <tr><td>Operationeel tijdverlies</td><td>${fmt(d.opMaand)}</td></tr>
+        <tr><td>Niet-gefactureerde prestaties</td><td>${fmt(d.nietGef)}</td></tr>
+        <tr><td>Administratieve druk</td><td>${fmt(d.admMaand)}</td></tr>
+        <tr class="total"><td>Totaal / maand</td><td>${fmt(d.totMaand)}</td></tr>`;
+
+      el('tbl-besparing').innerHTML = `
+        <tr class="pos"><td>Operationeel tijdverlies</td><td>${fmt(d.bespOp)}</td></tr>
+        <tr class="pos"><td>Gerecupereerde omzet</td><td>${fmt(d.bespOmz)}</td></tr>
+        <tr class="pos"><td>Administratieve druk</td><td>${fmt(d.bespAdm)}</td></tr>
+        <tr class="total"><td>Totale jaarlijkse besparing</td><td>${fmt(d.totJaar)}</td></tr>`;
+
+      el('tbl-projectie').innerHTML = `
+        <tr><td>Jaar 1</td><td>${fmt(d.k1)}</td><td class="pos">${fmt(d.totJaar)}</td><td class="${d.nettoJ1>=0?'pos':'neg'}">${fmt(d.nettoJ1)}</td></tr>
+        <tr><td>Jaar 2</td><td>${fmt(d.k2)}</td><td class="pos">${fmt(d.totJaar)}</td><td class="pos">${fmt(d.nettoJna)}</td></tr>
+        <tr><td>Jaar 3</td><td>${fmt(d.k3)}</td><td class="pos">${fmt(d.totJaar)}</td><td class="pos">${fmt(d.nettoJna)}</td></tr>
+        <tr class="total"><td>Totaal 3 jaar</td><td>${fmt(d.k1+d.k2+d.k3)}</td><td>${fmt(d.totJaar*3)}</td><td>${fmt(d.nettoJ1+d.nettoJna*2)}</td></tr>`;
+
+      el('res-een').textContent = fmt(d.een);
+      el('res-lic').textContent = fmt(d.lic);
+      el('res-be').textContent = fmtM(d.be);
+      el('res-aannames').innerHTML = `<strong style="color:#555">Aannames:</strong> Oplossingspercentage ${d.pct}% · ROI-projectie 3 jaar · Geen interne trainingskosten · Besparingen constant over 3 jaar`;
+      el('pdf-msg').innerHTML = '';
+
+      // Switch view
+      el('intake-view').style.display = 'none';
+      el('result-view').classList.add('visible');
+      el('header-sub').textContent = 'ROI Resultaat';
+      window.scrollTo(0, 0);
+
+      // Animaties
+      setTimeout(() => {
+        if (d.roi !== null && d.roi > 0) {
+          launchConfetti();
+        } else {
+          launchClouds();
+        }
+        countUp('kpi-be', d.be, 2500, '', ' mnd');
+        countUp('kpi-netto', d.nettoJ1, 3000, '€\u00a0', '');
+        countUp('kpi-roi', d.roi, 3500, '', '%');
+      }, 150);
+    }
+
+    function newCalc() {
+      el('intake-view').style.display = 'block';
+      el('result-view').classList.remove('visible');
+      el('header-sub').textContent = 'ROI Calculator';
+      window.scrollTo(0, 0);
+    }
+
+    // ── Confetti & wolken ──
+    function launchConfetti() {
+      const colors = ['#5B5BD6','#7B7BE8','#A5A5F0','#ffffff','#3d3d8f'];
+      confetti({ particleCount: 120, spread: 80, origin: { y: 0.5 }, colors, scalar: 1.1 });
+      setTimeout(() => confetti({ particleCount: 60, angle: 60, spread: 55, origin: { x: 0 }, colors }), 400);
+      setTimeout(() => confetti({ particleCount: 60, angle: 120, spread: 55, origin: { x: 1 }, colors }), 700);
+    }
+
+    function launchClouds() {
+      const grays = ['#9CA3AF','#6B7280','#D1D5DB','#4B5563','#E5E7EB'];
+      confetti({ particleCount: 60, spread: 120, origin: { y: 0.3 }, colors: grays, scalar: 1.4, shapes: ['circle'] });
+      setTimeout(() => confetti({ particleCount: 40, spread: 80, origin: { y: 0.2, x: 0.3 }, colors: grays, scalar: 1.6, shapes: ['circle'], ticks: 80 }), 500);
+      setTimeout(() => confetti({ particleCount: 40, spread: 80, origin: { y: 0.2, x: 0.7 }, colors: grays, scalar: 1.6, shapes: ['circle'], ticks: 80 }), 800);
+    }
+
+    // ── Odometer ──
+    function countUp(elId, target, duration, prefix, suffix) {
+      const elem = el(elId);
+      if (!elem || target == null || isNaN(target)) return;
+      const isNeg = target < 0;
+      const abs = Math.abs(target);
+      const start = performance.now();
+      function update(now) {
+        const progress = Math.min((now - start) / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3);
+        const current = Math.round(abs * ease);
+        const formatted = current.toLocaleString('nl-BE').replace(/,/g,'.');
+        elem.textContent = (isNeg ? '−' : '') + prefix + formatted + suffix;
+        if (progress < 1) requestAnimationFrame(update);
+        else elem.textContent = (isNeg ? '−' : '') + prefix + Math.round(abs).toLocaleString('nl-BE').replace(/,/g,'.') + suffix;
+      }
+      requestAnimationFrame(update);
     }
 
     // ── Easter Egg ──
@@ -268,58 +451,138 @@
       eggTimer = setTimeout(() => { eggClicks = 0; }, 600);
       if (eggClicks >= 3) {
         eggClicks = 0;
-        // Demo-case: Bouwbedrijf Van Den Berg
-        document.getElementById('bedrijfsnaam').value = 'Van Den Berg Bouw';
-        document.getElementById('sector').value = 'Bouw';
-        document.getElementById('contactpersoon').value = 'Pieter Van Den Berg';
-        document.getElementById('naamCoordinator').value = 'Sofie Claes';
-        document.getElementById('aantalMedewerkers').value = '45';
-        document.getElementById('kostprijsPerUur').value = '68';
-        document.getElementById('aantalMensen').value = '4';
-        document.getElementById('duurMinuten').value = '30';
-        document.getElementById('frequentie').value = '5';
+        el('bedrijfsnaam').value = 'Van Den Berg Bouw';
+        el('sector').value = 'Bouw';
+        el('contactpersoon').value = 'Pieter Van Den Berg';
+        el('naamCoordinator').value = 'Sofie Claes';
+        el('aantalMedewerkers').value = '45';
+        el('kostprijsPerUur').value = '68';
+        el('aantalMensen').value = '4';
+        el('duurMinuten').value = '30';
+        el('frequentie').value = '5';
         toggleNG(true);
-        document.getElementById('nietGefMaand').value = '1200';
-        document.getElementById('adminUren').value = '8';
-        document.getElementById('kostCoord').value = '72';
-        document.getElementById('eenmalig').value = '18500';
-        document.getElementById('licentie').value = '2400';
-        const sl = document.getElementById('reductie');
-        sl.value = 100;
-        document.getElementById('pct-badge').textContent = '100%';
-        updateSliderBg(sl);
+        el('nietGefMaand').value = '1200';
+        el('adminUren').value = '8';
+        el('kostCoord').value = '72';
+        el('eenmalig').value = '18500';
+        el('licentie').value = '2400';
+        el('reductie').value = '100';
+        el('pct-badge').textContent = '100%';
+        updateSliderBg(el('reductie'));
         liveCalc();
-        // Mini confetti op de hippo
-        const hippo = document.getElementById('hippo-logo');
-        const rect = hippo.getBoundingClientRect();
-        const x = (rect.left + rect.width/2) / window.innerWidth;
-        const y = (rect.top + rect.height/2) / window.innerHeight;
-        // Gebruik canvas-confetti via result pagina — hier gewoon een flash
-        hippo.style.transform = 'scale(1.4) rotate(15deg)';
-        hippo.style.transition = 'transform 0.2s';
-        setTimeout(() => { hippo.style.transform = 'scale(1) rotate(0deg)'; }, 400);
-        setTimeout(() => { hippo.style.transform = 'scale(1.2)'; }, 600);
-        setTimeout(() => { hippo.style.transform = 'scale(1)'; }, 900);
+        const logo = el('hippo-logo');
+        logo.style.transition = 'transform 0.2s';
+        [1.4, 1.0, 1.25, 1.0].forEach((s, i) => setTimeout(() => logo.style.transform = `scale(${s})`, i * 200));
       }
     }
 
-    function calculate() {
-      const naam = document.getElementById('bedrijfsnaam').value.trim();
-      if (!naam) { alert('Vul de bedrijfsnaam in.'); return; }
-      const d = getData();
-      const params = {
-        bedrijfsnaam: naam,
-        sector: document.getElementById('sector').value,
-        contactpersoon: document.getElementById('contactpersoon').value,
-        naamCoordinator: document.getElementById('naamCoordinator').value,
-        reductie: v('reductie') || 80,
-        opMaand: d.opMaand, admMaand: d.admMaand, nietGef: d.nietGef, totMaand: d.totMaand,
-        bespOp: d.bespOp, bespAdm: d.bespAdm, bespOmz: d.bespOmz, totJaar: d.totJaar,
-        k1: d.k1, k2: d.k2, k3: d.k3, nettoJ1: d.nettoJ1, nettoJna: d.nettoJna,
-        be: d.be, roi: d.roi, een: d.een, lic: d.lic
-      };
-      sessionStorage.setItem('aziri-roi', JSON.stringify(params));
-      window.open('result.html', '_blank');
+    // ── PDF ──
+    function generatePDF() {
+      el('pdf-msg').innerHTML = '<div class="loading-wrap" style="padding:12px 0"><div class="loading-bar"></div><p class="loading-text">PDF wordt gegenereerd…</p></div>';
+      setTimeout(() => {
+        try {
+          const { jsPDF } = window.jspdf;
+          const d = resultData;
+          const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+          const W = 210, mg = 16;
+
+          // Header
+          doc.setFillColor(255,255,255); doc.rect(0,0,W,28,'F');
+          doc.setFillColor(91,91,214); doc.rect(0,25,W,3,'F');
+          try { doc.addImage(HIPPO_B64,'PNG',mg,5,18,18); } catch(e) { doc.setFillColor(91,91,214); doc.roundedRect(mg,6,16,16,3,3,'F'); }
+          doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(91,91,214); doc.text('AZIRI',mg+22,13);
+          doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(156,163,175);
+          doc.text('ROI Calculator · 3-jaars projectie',mg+22,19);
+          doc.text(d.today,W-mg,13,{align:'right'});
+
+          let y = 36;
+
+          // Vertrouwelijk
+          doc.setFillColor(254,243,199); doc.roundedRect(mg,y,W-mg*2,10,2,2,'F');
+          doc.setDrawColor(252,211,77); doc.setLineWidth(0.3); doc.roundedRect(mg,y,W-mg*2,10,2,2,'S');
+          doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(120,53,15);
+          doc.text('🔒 Vertrouwelijk',mg+4,y+6.5);
+          doc.setFont('helvetica','normal'); doc.setTextColor(146,64,14);
+          doc.text('— Uitsluitend bestemd voor de ontvanger. Verspreiding zonder toestemming van Aziri is niet toegestaan.',mg+34,y+6.5);
+          y += 16;
+
+          // Klant
+          doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(17,24,39); doc.text(d.naam,mg,y); y+=5;
+          doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(156,163,175);
+          doc.text([d.sector,d.contact].filter(Boolean).join(' · ')+' · Opgesteld op '+d.today,mg,y); y+=7;
+
+          // Pct badge
+          doc.setFillColor(238,238,255); doc.roundedRect(mg,y,W-mg*2,9,2,2,'F');
+          doc.setFontSize(7.5); doc.setTextColor(91,91,214);
+          doc.text(`Oplossingspercentage: ${d.pct}% — geen enkele software lost alles 100% op.`,mg+5,y+6); y+=15;
+
+          // KPI's
+          const kw=(W-mg*2-8)/3;
+          [{l:'Terugverdientijd',v:fmtM(d.be),a:true},{l:'Netto winst jaar 1',v:fmt(d.nettoJ1),a:false},{l:'ROI over 3 jaar',v:fmtPct(d.roi),a:false}].forEach((k,i)=>{
+            const x=mg+i*(kw+4);
+            if(k.a){doc.setFillColor(238,238,255);doc.setDrawColor(91,91,214);doc.setLineWidth(0.5);}
+            else{doc.setFillColor(249,250,251);doc.setDrawColor(226,228,233);doc.setLineWidth(0.3);}
+            doc.roundedRect(x,y,kw,18,2,2,'FD');
+            doc.setFontSize(6); doc.setFont('helvetica','bold'); doc.setTextColor(156,163,175); doc.text(k.l.toUpperCase(),x+5,y+6.5);
+            doc.setFontSize(11); doc.setFont('helvetica','bold'); doc.setTextColor(91,91,214); doc.text(k.v,x+5,y+13.5);
+          }); y+=24;
+
+          // Tabellen
+          const tw=(W-mg*2-8)/2;
+          const lR=[['Operationeel tijdverlies',fmt(d.opMaand)],['Niet-gefactureerde prestaties',fmt(d.nietGef)],['Administratieve druk',fmt(d.admMaand)],['Totaal / maand',fmt(d.totMaand)]];
+          const rR=[['Tijdverlies (na correctie)',fmt(d.bespOp)],['Omzet gerecupereerd',fmt(d.bespOmz)],['Admin (na correctie)',fmt(d.bespAdm)],['Totale jaarlijkse besparing',fmt(d.totJaar)]];
+          doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(40,40,40);
+          doc.text('Huidige situatie / maand',mg,y); doc.text(`Bruto besparing / jaar (${d.pct}%)`,mg+tw+8,y); y+=3;
+          doc.setDrawColor(200); doc.setLineWidth(0.3); doc.line(mg,y,mg+tw,y); doc.line(mg+tw+8,y,mg+tw+8+tw,y); y+=5;
+          let ly=y,ry=y;
+          lR.forEach((row,ri)=>{const isT=ri===lR.length-1;doc.setFont('helvetica',isT?'bold':'normal');doc.setFontSize(8);doc.setTextColor(isT?91:70,isT?91:70,isT?214:70);doc.text(row[0],mg,ly);doc.text(row[1],mg+tw,ly,{align:'right'});ly+=6;if(!isT){doc.setDrawColor(243,244,246);doc.setLineWidth(0.1);doc.line(mg,ly-1.5,mg+tw,ly-1.5);}});
+          rR.forEach((row,ri)=>{const isT=ri===rR.length-1;doc.setFont('helvetica',isT?'bold':'normal');doc.setFontSize(8);doc.setTextColor(isT?91:70,isT?91:70,isT?214:70);doc.text(row[0],mg+tw+8,ry);doc.text(row[1],W-mg,ry,{align:'right'});ry+=6;if(!isT){doc.setDrawColor(243,244,246);doc.setLineWidth(0.1);doc.line(mg+tw+8,ry-1.5,W-mg,ry-1.5);}});
+          y=Math.max(ly,ry)+8;
+
+          // Projectie
+          doc.setFillColor(249,250,251);doc.setDrawColor(226,228,233);doc.setLineWidth(0.3);
+          doc.roundedRect(mg,y,W-mg*2,38,2,2,'FD');
+          doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(91,91,214);doc.text('PROJECTIE OVER 3 JAAR',mg+5,y+6);y+=9;
+          const cW=(W-mg*2-10)/4;
+          doc.setFontSize(7);doc.setFont('helvetica','bold');doc.setTextColor(156,163,175);
+          doc.text('',mg+5,y);doc.text('Jaar 1',mg+5+cW,y,{align:'right'});doc.text('Jaar 2',mg+5+cW*2,y,{align:'right'});doc.text('Jaar 3',mg+5+cW*3,y,{align:'right'});y+=5;
+          doc.setDrawColor(226,228,233);doc.setLineWidth(0.2);doc.line(mg+3,y,W-mg-3,y);y+=4;
+          doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(107,114,128);
+          doc.text('Kosten',mg+5,y);doc.text(fmt(d.k1),mg+5+cW,y,{align:'right'});doc.text(fmt(d.k2),mg+5+cW*2,y,{align:'right'});doc.text(fmt(d.k3),mg+5+cW*3,y,{align:'right'});y+=6;
+          doc.setTextColor(5,150,105);
+          doc.text('Besparing',mg+5,y);doc.text(fmt(d.totJaar),mg+5+cW,y,{align:'right'});doc.text(fmt(d.totJaar),mg+5+cW*2,y,{align:'right'});doc.text(fmt(d.totJaar),mg+5+cW*3,y,{align:'right'});y+=6;
+          doc.setFont('helvetica','bold');doc.setTextColor(91,91,214);
+          doc.text('Netto',mg+5,y);doc.text(fmt(d.nettoJ1),mg+5+cW,y,{align:'right'});doc.text(fmt(d.nettoJna),mg+5+cW*2,y,{align:'right'});doc.text(fmt(d.nettoJna),mg+5+cW*3,y,{align:'right'});y+=6;
+          doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(156,163,175);
+          doc.text('Cumulatief netto',mg+5,y);doc.text(fmt(d.nettoJ1),mg+5+cW,y,{align:'right'});doc.text(fmt(d.nettoJ1+d.nettoJna),mg+5+cW*2,y,{align:'right'});doc.text(fmt(d.nettoJ1+d.nettoJna*2),mg+5+cW*3,y,{align:'right'});y+=14;
+
+          // Investering
+          doc.setFillColor(238,238,255);doc.setDrawColor(91,91,214);doc.setLineWidth(0.5);
+          doc.roundedRect(mg,y,W-mg*2,17,2,2,'FD');
+          doc.setFont('helvetica','bold');doc.setFontSize(6.5);doc.setTextColor(91,91,214);doc.text('INVESTERING & SAMENVATTING',mg+5,y+6);
+          doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(75,85,99);
+          doc.text(`Ontwikkeling: ${fmt(d.een)}`,mg+5,y+12.5);doc.text(`Licentie/jaar: ${fmt(d.lic)}`,mg+66,y+12.5);
+          doc.setFont('helvetica','bold');doc.setTextColor(91,91,214);
+          doc.text(`Break-even: ${fmtM(d.be)}  |  ROI 3j: ${fmtPct(d.roi)}`,mg+118,y+12.5);y+=24;
+
+          // Aannames
+          doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(156,163,175);
+          doc.text(`Aannames: oplossingspercentage ${d.pct}% · projectie 3 jaar · geen interne trainingskosten · besparingen constant`,mg,y);y+=7;
+
+          // Footer
+          doc.setFillColor(91,91,214);doc.rect(0,y,W,2,'F');y+=4;
+          doc.setFillColor(254,243,199);doc.roundedRect(mg,y,tw,9,2,2,'F');
+          doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(120,53,15);
+          doc.text('🔒 Vertrouwelijk — Uitsluitend voor de ontvanger. Niet verspreiden zonder toestemming Aziri.',mg+3,y+6);
+          doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(91,91,214);doc.text('AZIRI',W-mg,y+5,{align:'right'});
+          doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(156,163,175);doc.text('aziri.eu · ROI_'+d.naam+'_Aziri',W-mg,y+10,{align:'right'});
+
+          doc.save(`ROI_${d.naam}_Aziri.pdf`);
+          el('pdf-msg').innerHTML = `<p class="success">✓ PDF opgeslagen: ROI_${d.naam}_Aziri.pdf</p>`;
+        } catch(e) {
+          el('pdf-msg').innerHTML = `<div class="error">PDF-fout: ${e.message}</div>`;
+        }
+      }, 100);
     }
   </script>
 </body>
