@@ -13,6 +13,35 @@ const state = {
 
 const STEPS = ["Klantinfo","Team & kostprijs","Operationeel tijdverlies","Niet-gefactureerde prestaties","Administratieve druk","Investering"];
 
+// SECTOR LABELS
+const SECTOR_LABELS = {
+  bouw: {
+    aantalMedewerkers: "Aantal vakmannen / arbeiders op de werf",
+    kostprijsPerUur:   "Gemiddelde loonkost vakman per uur",
+    naamCoordinator:   "Naam projectleider / planner",
+    adminUrenPerWeek:  "Uren handmatige verwerking werkbonnen per week",
+    kostprijsCoord:    "Loonkost projectleider/planner per uur",
+    tijdverliesLabel:  "Wachttijden en faalkosten op de werf",
+    tijdverliesHint:   "Denk aan: wachten op materiaal/tekeningen, zoekwerk, communicatiefouten tussen werf en kantoor.",
+    incidentLabel:     "Aantal vakmannen betrokken per incident",
+    medTooltip:        "Gebruik de totale werkgeverslasten (incl. pensioen, sociale lasten en overhead). In de bouw gemiddeld ca. €65/u.",
+    coordTooltip:      "Gebruik de totale werkgeverslasten (incl. pensioen, sociale lasten en overhead). Voor een planner in de bouw gemiddeld ca. €65/u.",
+  },
+  default: {
+    aantalMedewerkers: "Aantal operationele medewerkers",
+    kostprijsPerUur:   "Kostprijs per uur",
+    naamCoordinator:   "Naam coördinator / admin",
+    adminUrenPerWeek:  "Uren manuele admin per week",
+    kostprijsCoord:    "Kostprijs coördinator per uur",
+    tijdverliesLabel:  "Operationeel tijdverlies",
+    tijdverliesHint:   "Denk aan: wacht- of herstelmomenten, leveringsproblemen, zoekwerk, communicatiefouten.",
+    incidentLabel:     "Mensen per incident (totaal betrokken)",
+    medTooltip:        "Gebruik de totale werkgeverslasten (incl. pensioen, verzekeringen en vakantiegeld). Dit ligt vaak 1,3–1,5x hoger dan het brutoloon.",
+    coordTooltip:      "Gebruik de totale werkgeverslasten (incl. pensioen, verzekeringen en vakantiegeld). Dit ligt vaak 1,3–1,5x hoger dan het brutoloon.",
+  }
+};
+function L(){const s=(state.data.sector||"").toLowerCase().trim();if(["bouw","bouwsector","constructie"].includes(s))return SECTOR_LABELS.bouw;return SECTOR_LABELS.default;}
+
 function fmt(n) { if (n==null||isNaN(n)) return "—"; return "€\u00a0"+Math.round(n).toLocaleString("nl-BE").replace(/,/g,"."); }
 function fmtM(n) { if (n==null||isNaN(n)) return "—"; return (Math.round(n*10)/10).toFixed(1).replace(".",",")+"\u00a0mnd"; }
 function fmtPct(n) { if (n==null||isNaN(n)) return "—"; return (Math.round(n*10)/10).toFixed(1).replace(".",",")+"%"; }
@@ -112,24 +141,41 @@ function renderForm(){
   if(s===0){body=`<span class="label">Klantinfo</span>
     <div class="field"><label>Bedrijfsnaam *</label><input type="text" id="f0" value="${d.bedrijfsnaam}" placeholder="bijv. Bakkerij Maes"></div>
     <div class="field-grid">
-      <div class="field"><label>Sector</label><input type="text" id="f1" value="${d.sector}" placeholder="bijv. voeding, bouw"></div>
+      <div class="field">
+        <label>Sector <span style="color:#9CA3AF;font-size:11px">(bepaalt de terminologie)</span></label>
+        <select id="f1">
+          <option value="" ${!d.sector?"selected":""}>— Kies sector —</option>
+          <option value="Bouw" ${d.sector==="Bouw"?"selected":""}>Bouw</option>
+          <option value="Voeding" ${d.sector==="Voeding"?"selected":""}>Voeding</option>
+          <option value="Zorg" ${d.sector==="Zorg"?"selected":""}>Zorg</option>
+          <option value="Logistiek" ${d.sector==="Logistiek"?"selected":""}>Logistiek</option>
+          <option value="Techniek" ${d.sector==="Techniek"?"selected":""}>Techniek</option>
+          <option value="Retail" ${d.sector==="Retail"?"selected":""}>Retail</option>
+          <option value="Andere" ${d.sector==="Andere"?"selected":""}>Andere</option>
+        </select>
+        <p class="hint">Kies "Bouw" voor sectorspecifieke terminologie. Andere sectoren gebruiken generieke labels.</p>
+      </div>
       <div class="field"><label>Contactpersoon <span style="color:#9CA3AF;font-size:11px">(optioneel)</span></label><input type="text" id="f2" value="${d.contactpersoon}" placeholder="naam"></div>
     </div>
     <div class="btn-row"><button class="btn-primary" onclick="next(0)">Volgende →</button></div>`;}
-  else if(s===1){body=`<span class="label">Team & kostprijs</span>
+  else if(s===1){const lbl=L();body=`<span class="label">Team & kostprijs</span>
     <div class="field-grid">
-      <div class="field"><label>Aantal operationele medewerkers</label><input type="number" id="f0" value="${d.aantalMedewerkers}" placeholder="bijv. 8" min="1"></div>
-      <div class="field"><label>Kostprijs per uur (€) ${infoTip("Gebruik de totale werkgeverslasten (incl. pensioen, verzekeringen en vakantiegeld), niet alleen het brutoloon. Dit ligt vaak 1,3–1,5× hoger.")}</label><input type="number" id="f1" value="${d.kostprijsPerUur}" placeholder="65"><p class="hint">Standaard: € 65/u</p></div>
+      <div class="field"><label>${lbl.aantalMedewerkers}</label><input type="number" id="f0" value="${d.aantalMedewerkers}" placeholder="bijv. 8" min="1"></div>
+      <div class="field"><label>${lbl.kostprijsPerUur} ${infoTip(lbl.medTooltip)}</label><input type="number" id="f1" value="${d.kostprijsPerUur}" placeholder="65"><p class="hint">Standaard: € 65/u</p></div>
     </div>
-    <div class="field"><label>Naam coördinator <span style="color:#9CA3AF;font-size:11px">(optioneel)</span></label><input type="text" id="f2" value="${d.naamCoordinator}" placeholder="bijv. Jana Claes"></div>
+    <div class="field"><label>${lbl.naamCoordinator} <span style="color:#9CA3AF;font-size:11px">(optioneel)</span></label><input type="text" id="f2" value="${d.naamCoordinator}" placeholder="bijv. Jana Claes"></div>
     <div class="btn-row"><button class="btn-secondary" onclick="prev()">←</button><button class="btn-primary" onclick="next(1)">Volgende →</button></div>`;}
-  else if(s===2){body=`<span class="label">Operationeel tijdverlies</span>
-    <p style="font-size:13px;color:var(--text-muted);margin-bottom:18px;line-height:1.6">Denk op <strong>bedrijfsniveau</strong>: hoeveel mensen <em>samen</em> betrokken zijn bij een typisch wacht- of herstelmoment, hoelang dat duurt, en hoe vaak dit per week voorvalt voor het hele bedrijf.</p>
+  else if(s===2){const lbl=L();body=`<span class="label">${lbl.tijdverliesLabel}</span>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:18px;line-height:1.6"><strong>${lbl.tijdverliesHint}</strong><br>Denk op <strong>bedrijfsniveau</strong>: dit zijn <em>totale</em> incidenten voor het hele bedrijf, niet per medewerker.</p>
     <div class="field-grid">
-      <div class="field"><label>Mensen per incident (totaal betrokken)</label><input type="number" id="f0" value="${d.aantalMensenPerIncident}" placeholder="bijv. 3" min="1"></div>
+      <div class="field"><label>${lbl.incidentLabel}</label><input type="number" id="f0" value="${d.aantalMensenPerIncident}" placeholder="bijv. 3" min="1"></div>
       <div class="field"><label>Duur per incident (minuten)</label><input type="number" id="f1" value="${d.duurIncidentMinuten}" placeholder="bijv. 15" min="1"></div>
     </div>
-    <div class="field"><label>Frequentie per week (bedrijfsbreed)</label><input type="number" id="f2" value="${d.frequentiePerWeek}" placeholder="bijv. 4" min="0" step="0.5"></div>
+    <div class="field">
+      <label>Hoe vaak komt dit incident in totaal voor binnen het hele bedrijf per week?</label>
+      <input type="number" id="f2" value="${d.frequentiePerWeek}" placeholder="bijv. 4" min="0" step="0.5">
+      <p class="hint">De berekening vermenigvuldigt dit automatisch met het aantal betrokken mensen en de duur.</p>
+    </div>
     <div class="btn-row"><button class="btn-secondary" onclick="prev()">←</button><button class="btn-primary" onclick="next(2)">Volgende →</button></div>`;}
   else if(s===3){body=`<span class="label">Niet-gefactureerde prestaties</span>
     <div class="field"><label>Worden materialen, uren of diensten gebruikt die niet altijd gefactureerd worden?</label>
@@ -142,10 +188,10 @@ function renderForm(){
       <div class="field"><label>Geschat maandelijks niet-gefactureerd bedrag (€)</label><input type="number" id="f0" value="${d.nietGefactureerdMaand||""}" placeholder="bijv. 800" min="0"></div>
     </div>
     <div class="btn-row"><button class="btn-secondary" onclick="prev()">←</button><button class="btn-primary" onclick="next(3)">Volgende →</button></div>`;}
-  else if(s===4){body=`<span class="label">Administratieve druk</span>
+  else if(s===4){const lbl=L();body=`<span class="label">Administratieve druk</span>
     <div class="field-grid">
-      <div class="field"><label>Uren manuele admin per week</label><input type="number" id="f0" value="${d.adminUrenPerWeek}" placeholder="bijv. 6" min="0" step="0.5"></div>
-      <div class="field"><label>Kostprijs coördinator per uur (€) ${infoTip("Gebruik de totale werkgeverslasten (incl. pensioen, verzekeringen en vakantiegeld), niet alleen het brutoloon. Dit ligt vaak 1,3–1,5× hoger.")}</label><input type="number" id="f1" value="${d.kostprijsCoordinatorPerUur||d.kostprijsPerUur}" placeholder="${d.kostprijsPerUur||65}"><p class="hint">Standaard: teamgemiddelde</p></div>
+      <div class="field"><label>${lbl.adminUrenPerWeek}</label><input type="number" id="f0" value="${d.adminUrenPerWeek}" placeholder="bijv. 6" min="0" step="0.5"></div>
+      <div class="field"><label>${lbl.kostprijsCoord} ${infoTip(lbl.coordTooltip)}</label><input type="number" id="f1" value="${d.kostprijsCoordinatorPerUur||d.kostprijsPerUur}" placeholder="${d.kostprijsPerUur||65}"><p class="hint">Standaard: teamgemiddelde</p></div>
     </div>
     <div class="btn-row"><button class="btn-secondary" onclick="prev()">←</button><button class="btn-primary" onclick="next(4)">Volgende →</button></div>`;}
   else if(s===5){body=`<span class="label">Investering</span>

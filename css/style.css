@@ -143,6 +143,8 @@ body {
   border-color: var(--aziri);
   box-shadow: 0 0 0 3px rgba(91,91,214,0.12);
 }
+.field select option { color: var(--text); background: var(--bg-input); }
+.field select { cursor: pointer; }
 .field input::placeholder,
 .field textarea::placeholder { color: var(--text-dim); }
 .field .hint { font-size: 11px; color: var(--text-dim); margin-top: 5px; }
