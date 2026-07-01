@@ -138,19 +138,110 @@ function loadTxtFile(event){
   reader.readAsText(file, "UTF-8");
 }
 
+function parseTranscript(text){
+  // Lokale parser — geen API nodig
+  const t = text.toLowerCase();
+  const ex = {};
+
+  // Bedrijfsnaam: zoek na "klant", "bedrijf", "firma", of voor "bvba"/"nv"/"vzw"
+  const bedrijfMatch = text.match(/(?:klant(?:ennaam)?|bedrijf(?:snaam)?|firma)[:\s]+([A-Z][A-Za-z&\s\-\.]{1,40})/i)
+    || text.match(/([A-Z][A-Za-z\s\-]{2,30})\s+(?:bvba|nv|vzw|cv|bv)/i);
+  if(bedrijfMatch) ex.bedrijfsnaam = bedrijfMatch[1].trim();
+
+  // Contactpersoon
+  const contactMatch = text.match(/(?:contact(?:persoon)?|naam|spreker\s*1)[:\s]+([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)/i);
+  if(contactMatch) ex.contactpersoon = contactMatch[1].trim();
+
+  // Medewerkers
+  const medMatch = t.match(/(\d+)\s*(?:medewerkers?|werknemers?|mensen|personen|vakmannen|arbeiders?|man\s+(?:sterk|groot))/);
+  if(medMatch) ex.aantalMedewerkers = parseInt(medMatch[1]);
+
+  // Kostprijs per uur — zoek €X/u of X euro per uur
+  const kostMatch = t.match(/[€e]\s*(\d+)(?:[,.](\d+))?\s*(?:\/\s*u(?:ur)?|per\s*uur)/);
+  if(kostMatch) ex.kostprijsPerUur = parseFloat(kostMatch[1] + (kostMatch[2] ? '.'+kostMatch[2] : ''));
+
+  // Coördinator naam
+  const coordMatch = text.match(/(?:coördinator|coordinator|planner|projectleider|verantwoordelijke|admin)[:\s]+([A-Z][a-z]+)/i);
+  if(coordMatch) ex.naamCoordinator = coordMatch[1].trim();
+
+  // Mensen per incident
+  const mensenMatch = t.match(/(\d+)\s*(?:man|mensen|personen|medewerkers?)\s*(?:wachten|betrokken|staan|per\s*incident)/);
+  if(mensenMatch) ex.aantalMensenPerIncident = parseInt(mensenMatch[1]);
+
+  // Duur per incident in minuten
+  const duurMatch = t.match(/(\d+)\s*(?:minuten?|min\.?)\s*(?:per\s*(?:keer|incident|voorval|wacht))?/);
+  if(duurMatch) ex.duurIncidentMinuten = parseInt(duurMatch[1]);
+
+  // Frequentie per week
+  const freqMatch = t.match(/(\d+(?:[,.]?\d+)?)\s*[xX×]\s*per\s*week/)
+    || t.match(/(\d+(?:[,.]?\d+)?)\s*keer\s*per\s*week/)
+    || t.match(/per\s*week[:\s]+(\d+(?:[,.]?\d+)?)\s*keer/);
+  if(freqMatch) ex.frequentiePerWeek = parseFloat(freqMatch[1].replace(',','.'));
+
+  // Niet-gefactureerd bedrag
+  const nietGefMatch = t.match(/niet[\s-]*(?:gefactureerd|aangerekend|verrekend)[^\d]*[€e]?\s*(\d[\d.,]*)/);
+  if(nietGefMatch){
+    const val = parseFloat(nietGefMatch[1].replace(/\./g,'').replace(',','.'));
+    if(!isNaN(val)){ ex.nietGefactureerdMaand = val; }
+  }
+
+  // Admin uren per week
+  const adminMatch = t.match(/(\d+(?:[,.]?\d+)?)\s*(?:uur|u)\s*(?:per\s*week)?\s*(?:aan\s*)?(?:admin|administratie|papierwerk|verwerking|werkbonnen)/);
+  if(adminMatch) ex.adminUrenPerWeek = parseFloat(adminMatch[1].replace(',','.'));
+
+  // Eenmalige ontwikkelingskosten
+  const eenmaligMatch = t.match(/(?:ontwikkeling|eenmalig|investering)[^\d€]*[€e]?\s*([\d.,]+)/);
+  if(eenmaligMatch){
+    const val = parseFloat(eenmaligMatch[1].replace(/\./g,'').replace(',','.'));
+    if(!isNaN(val) && val > 100) ex.eenmaligeKosten = val;
+  }
+
+  // Jaarlijkse licentie
+  const licMatch = t.match(/(?:licentie|abonnement|jaarlijks)[^\d€]*[€e]?\s*([\d.,]+)\s*(?:per\s*(?:jaar|maand))?/);
+  if(licMatch){
+    let val = parseFloat(licMatch[1].replace(/\./g,'').replace(',','.'));
+    if(!isNaN(val) && val > 0){
+      // Als het per maand is, vermenigvuldig x12
+      if(t.includes('per maand') && val < 500) val = val * 12;
+      ex.jaarlijkseLicentie = val;
+    }
+  }
+
+  return ex;
+}
+
 async function extractTranscript(){
   const text=el("transcript-txt").value.trim();
   if(!text){set("extract-status",`<div class="error">Plak eerst een transcript of notities.</div>`);return;}
-  set("extract-status",`<div class="loading-wrap"><div class="loading-bar"></div><p class="loading-text">AI analyseert je transcript…</p></div>`);
+  set("extract-status",`<div class="loading-wrap"><div class="loading-bar"></div><p class="loading-text">Transcript wordt geanalyseerd…</p></div>`);
+
+  // Probeer eerst de Netlify Function (Claude API)
   try{
     const resp=await fetch("/.netlify/functions/extract",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text})});
-    const json=await resp.json();
-    const raw=json.content?.find(b=>b.type==="text")?.text||"{}";
-    const ex=JSON.parse(raw.replace(/```json|```/g,"").trim());
-    Object.keys(ex).forEach(k=>{if(ex[k]!==null&&state.data[k]!==undefined)state.data[k]=ex[k];});
-    if(ex.nietGefactureerdMaand)state.data.nietGefactureerd=true;
-    state.screen="form";state.step=0;render();
-  }catch(e){set("extract-status",`<div class="error">Fout: ${e.message}</div>`);}
+    if(resp.ok){
+      const json=await resp.json();
+      if(!json.error){
+        const raw=json.content?.find(b=>b.type==="text")?.text||"{}";
+        const ex=JSON.parse(raw.replace(/```json|```/g,"").trim());
+        Object.keys(ex).forEach(k=>{if(ex[k]!==null&&state.data[k]!==undefined)state.data[k]=ex[k];});
+        if(ex.nietGefactureerdMaand)state.data.nietGefactureerd=true;
+        state.screen="form";state.step=0;render();
+        return;
+      }
+    }
+  }catch(e){ /* Geen API beschikbaar, val terug op lokale parser */ }
+
+  // Fallback: lokale parser
+  const ex = parseTranscript(text);
+  const aantalVelden = Object.keys(ex).length;
+  Object.keys(ex).forEach(k=>{if(ex[k]!==null&&state.data[k]!==undefined)state.data[k]=ex[k];});
+  if(ex.nietGefactureerdMaand)state.data.nietGefactureerd=true;
+
+  const msg = aantalVelden > 0
+    ? `<div style="font-size:12px;color:var(--green);margin-top:8px">✓ ${aantalVelden} veld(en) herkend zonder AI. Controleer en vul aan waar nodig.</div>`
+    : `<div class="error">Geen gegevens herkend. Vul het formulier manueel in.</div>`;
+  set("extract-status", msg);
+  setTimeout(()=>{ state.screen="form";state.step=0;render(); }, 1500);
 }
 
 function renderForm(){
