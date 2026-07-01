@@ -4,34 +4,280 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Aziri ROI Calculator</title>
-  <meta name="description" content="Bereken operationeel tijdverlies en ROI voor prospects — door Aziri." />
   <link rel="stylesheet" href="css/style.css" />
   <link rel="icon" href="hippo.png" />
+  <style>
+    .sp-wrap { display: grid; grid-template-columns: 1fr 260px; min-height: calc(100vh - 57px); }
+    .sp-form { padding: 28px 32px 60px; overflow-y: auto; }
+    .sp-result { background: #F8F9FB; border-left: 1px solid var(--border); padding: 20px 18px; position: sticky; top: 57px; height: calc(100vh - 57px); overflow-y: auto; }
+    .sp-section { margin-bottom: 28px; }
+    .sp-section-title { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--aziri); font-weight: 700; margin-bottom: 4px; }
+    .sp-section-desc { font-size: 12px; color: var(--text-dim); margin-bottom: 14px; line-height: 1.5; }
+    .sp-divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    .sp-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .sp-field { display: flex; flex-direction: column; gap: 5px; }
+    .sp-field label { font-size: 12px; font-weight: 600; color: var(--text); }
+    .sp-field input, .sp-field select { font-size: 14px; padding: 8px 11px; border-radius: var(--radius-sm); border: 1.5px solid var(--border-mid); background: #fff; color: var(--text); width: 100%; transition: border-color 0.15s; }
+    .sp-field input:focus, .sp-field select:focus { outline: none; border-color: var(--aziri); box-shadow: 0 0 0 3px rgba(91,91,214,0.1); }
+    .sp-field .hint { font-size: 11px; color: var(--text-dim); }
+    .toggle-ja { display: flex; gap: 8px; }
+    .toggle-ja-btn { flex: 1; padding: 9px 0; border: 1.5px solid var(--border-mid); border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; text-align: center; background: #fff; transition: all 0.15s; }
+    .toggle-ja-btn.active { background: var(--aziri-light); border-color: var(--aziri); color: var(--aziri); }
+    .slider-wrap { padding: 14px 18px; background: #fff; border: 1.5px solid var(--aziri); border-radius: var(--radius); }
+    .slider-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .slider-title { font-size: 13px; font-weight: 700; color: var(--text); }
+    .slider-pct { background: var(--aziri); color: #fff; font-size: 16px; font-weight: 700; padding: 5px 14px; border-radius: 7px; }
+    .slider { width: 100%; height: 6px; -webkit-appearance: none; appearance: none; border-radius: 3px; background: linear-gradient(to right, var(--aziri) 60%, var(--border-mid) 60%); outline: none; margin-bottom: 4px; cursor: pointer; }
+    .slider::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--aziri); border: 2px solid #fff; box-shadow: 0 2px 6px rgba(91,91,214,0.3); cursor: pointer; }
+    .slider-ticks { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-dim); }
+    .btn-calculate { width: 100%; padding: 14px; font-size: 15px; font-weight: 700; background: var(--aziri); color: #fff; border: none; border-radius: var(--radius-sm); cursor: pointer; transition: background 0.15s, transform 0.1s; margin-top: 4px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .btn-calculate:hover { background: var(--aziri-dark); }
+    .btn-calculate:active { transform: scale(0.98); }
+    /* Live result sidebar */
+    .rv-label { font-size: 9px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-dim); font-weight: 600; margin-bottom: 3px; }
+    .rv-val { font-size: 18px; font-weight: 700; color: var(--aziri); margin-bottom: 12px; }
+    .rv-val.green { color: var(--green); }
+    .rv-val.amber { color: var(--amber); }
+    .rv-section { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-dim); font-weight: 600; border-top: 1px solid var(--border); padding-top: 10px; margin: 10px 0 8px; }
+    .rv-row { display: flex; justify-content: space-between; font-size: 11px; padding: 3px 0; border-bottom: 1px solid #eee; color: var(--text-muted); }
+    .rv-row span:last-child { font-weight: 600; color: var(--text); }
+    .rv-row.pos span:last-child { color: var(--green); }
+    .rv-row.neg span:last-child { color: var(--red); }
+    .rv-row.tot { font-weight: 700; border-bottom: none; }
+    .rv-row.tot span:last-child { color: var(--aziri); }
+    .rv-empty { font-size: 12px; color: var(--text-dim); text-align: center; padding: 24px 0; line-height: 1.6; }
+    @media (max-width: 680px) { .sp-wrap { grid-template-columns: 1fr; } .sp-result { display: none; } }
+  </style>
 </head>
 <body>
-
   <header class="header">
     <div class="header-left">
-      <div class="header-hippo">
-        <img src="hippo.png" alt="Aziri" style="width:28px;height:28px;object-fit:contain;" />
-      </div>
+      <div class="header-hippo"><img src="hippo.png" alt="Aziri" style="width:28px;height:28px;object-fit:contain;" /></div>
       <div class="header-brand">
         <span class="logo-text">AZIRI</span>
         <span class="header-sub">ROI Calculator</span>
       </div>
     </div>
-    <div class="confidential-badge">
-      🔒 Vertrouwelijk document
-    </div>
+    <div class="confidential-badge">🔒 Vertrouwelijk document</div>
   </header>
 
-  <main class="main">
-    <div id="app"></div>
-  </main>
+  <div class="sp-wrap">
+    <div class="sp-form">
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+      <div class="sp-section">
+        <div class="sp-section-title">Klantinfo</div>
+        <div class="sp-field-row">
+          <div class="sp-field"><label>Bedrijfsnaam *</label><input type="text" id="bedrijfsnaam" oninput="liveCalc()"></div>
+          <div class="sp-field"><label>Sector <span style="font-weight:400;color:var(--text-dim)">(bepaalt terminologie)</span></label>
+            <select id="sector" onchange="liveCalc()">
+              <option value="">— Kies sector —</option>
+              <option value="Afvalverwerking">Afvalverwerking</option>
+              <option value="Bouw">Bouw</option>
+              <option value="Consultancy">Consultancy</option>
+              <option value="Financieel">Financieel</option>
+              <option value="Gezondheidszorg">Gezondheidszorg</option>
+              <option value="Groot & Detailhandel">Groot & Detailhandel</option>
+              <option value="Horeca">Horeca</option>
+              <option value="HR Diensten">HR Diensten</option>
+              <option value="Huisvestiging">Huisvestiging</option>
+              <option value="Installatie">Installatie</option>
+              <option value="Overheidsinstelling">Overheidsinstelling</option>
+              <option value="Productie">Productie</option>
+              <option value="Telecom">Telecom</option>
+              <option value="Transport & Logistiek">Transport & Logistiek</option>
+              <option value="Verhuur">Verhuur</option>
+              <option value="Voeding">Voeding</option>
+              <option value="Overige">Overige</option>
+            </select>
+          </div>
+        </div>
+        <div class="sp-field-row">
+          <div class="sp-field"><label>Contactpersoon <span style="font-weight:400;color:var(--text-dim)">(optioneel)</span></label><input type="text" id="contactpersoon"></div>
+          <div class="sp-field"><label>Naam coördinator <span style="font-weight:400;color:var(--text-dim)">(optioneel)</span></label><input type="text" id="naamCoordinator"></div>
+        </div>
+      </div>
+
+      <hr class="sp-divider">
+
+      <div class="sp-section">
+        <div class="sp-section-title">Team & kostprijs</div>
+        <div class="sp-field-row">
+          <div class="sp-field"><label>Aantal operationele medewerkers</label><input type="number" id="aantalMedewerkers" min="1" oninput="liveCalc()"></div>
+          <div class="sp-field"><label>Kostprijs per uur (€)</label><input type="number" id="kostprijsPerUur" value="65" min="0" oninput="liveCalc()"><p class="hint">Incl. werkgeverslasten · standaard €65/u</p></div>
+        </div>
+      </div>
+
+      <hr class="sp-divider">
+
+      <div class="sp-section">
+        <div class="sp-section-title">Operationeel tijdverlies</div>
+        <div class="sp-section-desc">Bedrijfsniveau — totale incidenten voor het hele bedrijf, niet per medewerker.</div>
+        <div class="sp-field-row">
+          <div class="sp-field"><label>Mensen per incident</label><input type="number" id="aantalMensen" min="1" oninput="liveCalc()"></div>
+          <div class="sp-field"><label>Duur per incident (minuten)</label><input type="number" id="duurMinuten" min="1" oninput="liveCalc()"></div>
+        </div>
+        <div class="sp-field"><label>Hoe vaak per week? (bedrijfsbreed)</label><input type="number" id="frequentie" min="0" step="0.5" oninput="liveCalc()" style="max-width:180px"><p class="hint">De berekening vermenigvuldigt automatisch met betrokken mensen en duur.</p></div>
+      </div>
+
+      <hr class="sp-divider">
+
+      <div class="sp-section">
+        <div class="sp-section-title">Niet-gefactureerde prestaties</div>
+        <div class="sp-section-desc">Materialen, uren of diensten die niet altijd gefactureerd worden.</div>
+        <div class="toggle-ja" style="margin-bottom:12px">
+          <div class="toggle-ja-btn" id="btn-nee" onclick="toggleNG(false)">Nee</div>
+          <div class="toggle-ja-btn" id="btn-ja" onclick="toggleNG(true)">Ja</div>
+        </div>
+        <div id="ng-veld" style="display:none">
+          <div class="sp-field"><label>Geschat maandelijks niet-gefactureerd bedrag (€)</label><input type="number" id="nietGefMaand" min="0" oninput="liveCalc()" style="max-width:220px"></div>
+        </div>
+      </div>
+
+      <hr class="sp-divider">
+
+      <div class="sp-section">
+        <div class="sp-section-title">Administratieve druk</div>
+        <div class="sp-field-row">
+          <div class="sp-field"><label>Uren manuele admin per week</label><input type="number" id="adminUren" min="0" step="0.5" oninput="liveCalc()"></div>
+          <div class="sp-field"><label>Kostprijs coördinator (€/u)</label><input type="number" id="kostCoord" min="0" oninput="liveCalc()"><p class="hint">Standaard: teamgemiddelde</p></div>
+        </div>
+      </div>
+
+      <hr class="sp-divider">
+
+      <div class="sp-section">
+        <div class="sp-section-title">Investering</div>
+        <div class="sp-field-row">
+          <div class="sp-field"><label>Eenmalige ontwikkelingskosten (€)</label><input type="number" id="eenmalig" min="0" oninput="liveCalc()"></div>
+          <div class="sp-field"><label>Jaarlijkse licentiekosten (€)</label><input type="number" id="licentie" min="0" oninput="liveCalc()"></div>
+        </div>
+      </div>
+
+      <hr class="sp-divider">
+
+      <div class="sp-section">
+        <div class="slider-wrap">
+          <div class="slider-row">
+            <div><div class="slider-title">Oplossingspercentage</div><div style="font-size:11px;color:var(--text-dim);margin-top:2px">Geen software lost alles 100% op</div></div>
+            <div class="slider-pct" id="pct-badge">80%</div>
+          </div>
+          <input type="range" class="slider" id="reductie" min="50" max="100" step="5" value="80"
+            oninput="document.getElementById('pct-badge').textContent=this.value+'%';updateSliderBg(this);liveCalc()">
+          <div class="slider-ticks"><span>50%</span><span>60%</span><span>70%</span><span>80%</span><span>90%</span><span>100%</span></div>
+        </div>
+      </div>
+
+      <button class="btn-calculate" onclick="calculate()">
+        📊 &nbsp;Bereken ROI — open resultaat
+      </button>
+
+    </div>
+
+    <div class="sp-result" id="live-result">
+      <div class="rv-empty">Vul de gegevens in —<br>de preview verschijnt hier live.</div>
+    </div>
+  </div>
+
   <script src="js/hippo.js"></script>
-  <script src="js/app.js"></script>
+  <script>
+    let ng = false;
 
+    function toggleNG(val) {
+      ng = val;
+      document.getElementById('btn-ja').classList.toggle('active', val);
+      document.getElementById('btn-nee').classList.toggle('active', !val);
+      document.getElementById('ng-veld').style.display = val ? 'block' : 'none';
+      liveCalc();
+    }
+    toggleNG(false);
+
+    function updateSliderBg(el) {
+      const pct = (el.value - el.min) / (el.max - el.min) * 100;
+      el.style.background = `linear-gradient(to right, var(--aziri) ${pct}%, var(--border-mid) ${pct}%)`;
+    }
+    updateSliderBg(document.getElementById('reductie'));
+
+    function v(id) { return parseFloat(document.getElementById(id).value) || 0; }
+    function fmt(n) { return '€\u00a0' + Math.round(n).toLocaleString('nl-BE').replace(/,/g, '.'); }
+    function fmtM(n) { if (!n || isNaN(n)) return '—'; return (Math.round(n * 10) / 10).toFixed(1).replace('.', ',') + '\u00a0mnd'; }
+    function fmtPct(n) { return (Math.round(n * 10) / 10).toFixed(1).replace('.', ',') + '%'; }
+
+    function getData() {
+      const r = v('reductie') / 100 || 0.8;
+      const kMed = v('kostprijsPerUur') || 65;
+      const kCoord = v('kostCoord') || kMed;
+      const men = v('aantalMensen'), dur = v('duurMinuten'), fr = v('frequentie');
+      const admin = v('adminUren');
+      const nietGef = ng ? (v('nietGefMaand') || 0) : 0;
+      const een = v('eenmalig'), lic = v('licentie');
+
+      const verlUren = men * (dur / 60) * fr;
+      const opMaand = verlUren * kMed * 4.33;
+      const admMaand = admin * kCoord * 4.33;
+      const totMaand = opMaand + admMaand + nietGef;
+
+      const bespOp = (verlUren * kMed * 52) * r;
+      const bespAdm = (admin * kCoord * 52) * r;
+      const bespOmz = (nietGef * 12) * r;
+      const totJaar = bespOp + bespAdm + bespOmz;
+
+      const k1 = een + lic, k2 = lic, k3 = lic;
+      const nettoJ1 = totJaar - k1;
+      const nettoJna = totJaar - lic;
+      const be = nettoJna > 0 ? k1 / (nettoJna / 12) : null;
+      const roi = (k1 + k2 + k3) > 0 ? ((totJaar * 3 - (k1 + k2 + k3)) / (k1 + k2 + k3)) * 100 : null;
+
+      return { r, opMaand, admMaand, nietGef, totMaand, bespOp, bespAdm, bespOmz, totJaar, k1, k2, k3, nettoJ1, nettoJna, be, roi, een, lic, kMed, kCoord };
+    }
+
+    function liveCalc() {
+      const d = getData();
+      const hasData = d.totMaand > 0 || d.k1 > 0;
+      const el = document.getElementById('live-result');
+      if (!hasData) { el.innerHTML = '<div class="rv-empty">Vul de gegevens in —<br>de preview verschijnt hier live.</div>'; return; }
+
+      el.innerHTML = `
+        <div class="rv-label">Terugverdientijd</div>
+        <div class="rv-val">${d.be ? fmtM(d.be) : '—'}</div>
+        <div class="rv-label">Netto winst jaar 1</div>
+        <div class="rv-val ${d.nettoJ1 >= 0 ? 'green' : ''}">${fmt(d.nettoJ1)}</div>
+        <div class="rv-label">ROI over 3 jaar</div>
+        <div class="rv-val ${d.roi >= 0 ? 'green' : ''}">${d.roi != null ? fmtPct(d.roi) : '—'}</div>
+        <div class="rv-section">Tijdverlies / maand</div>
+        <div class="rv-row"><span>Operationeel</span><span>${fmt(d.opMaand)}</span></div>
+        <div class="rv-row"><span>Niet-gefactureerd</span><span>${fmt(d.nietGef)}</span></div>
+        <div class="rv-row"><span>Administratief</span><span>${fmt(d.admMaand)}</span></div>
+        <div class="rv-row tot"><span>Totaal</span><span>${fmt(d.totMaand)}</span></div>
+        <div class="rv-section">Besparing / jaar</div>
+        <div class="rv-row pos"><span>Tijdverlies</span><span>${fmt(d.bespOp)}</span></div>
+        <div class="rv-row pos"><span>Omzet</span><span>${fmt(d.bespOmz)}</span></div>
+        <div class="rv-row pos"><span>Admin</span><span>${fmt(d.bespAdm)}</span></div>
+        <div class="rv-row neg"><span>Licentie</span><span>−${fmt(d.lic)}</span></div>
+        <div class="rv-row tot"><span>Netto / jaar</span><span>${fmt(d.nettoJna)}</span></div>
+        <div class="rv-section">Investering</div>
+        <div class="rv-row"><span>Ontwikkeling</span><span>${fmt(d.een)}</span></div>
+        <div class="rv-row"><span>Licentie/jaar</span><span>${fmt(d.lic)}</span></div>
+        <div class="rv-row tot"><span>Break-even</span><span>${d.be ? fmtM(d.be) : '—'}</span></div>`;
+    }
+
+    function calculate() {
+      const naam = document.getElementById('bedrijfsnaam').value.trim();
+      if (!naam) { alert('Vul de bedrijfsnaam in.'); return; }
+      const d = getData();
+      const params = {
+        bedrijfsnaam: naam,
+        sector: document.getElementById('sector').value,
+        contactpersoon: document.getElementById('contactpersoon').value,
+        naamCoordinator: document.getElementById('naamCoordinator').value,
+        reductie: v('reductie') || 80,
+        opMaand: d.opMaand, admMaand: d.admMaand, nietGef: d.nietGef, totMaand: d.totMaand,
+        bespOp: d.bespOp, bespAdm: d.bespAdm, bespOmz: d.bespOmz, totJaar: d.totJaar,
+        k1: d.k1, k2: d.k2, k3: d.k3, nettoJ1: d.nettoJ1, nettoJna: d.nettoJna,
+        be: d.be, roi: d.roi, een: d.een, lic: d.lic
+      };
+      sessionStorage.setItem('aziri-roi', JSON.stringify(params));
+      window.open('result.html', '_blank');
+    }
+  </script>
 </body>
 </html>

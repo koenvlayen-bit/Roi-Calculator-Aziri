@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aziri ROI — Resultaat</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="hippo.png" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  <script src="js/hippo.js"></script>
+</head>
+<body>
+  <header class="header">
+    <div class="header-left">
+      <div class="header-hippo"><img src="hippo.png" alt="Aziri" style="width:28px;height:28px;object-fit:contain;" /></div>
+      <div class="header-brand">
+        <span class="logo-text">AZIRI</span>
+        <span class="header-sub">ROI Resultaat</span>
+      </div>
+    </div>
+    <div class="confidential-badge">🔒 Vertrouwelijk document</div>
+  </header>
+
+  <main class="main" id="main"></main>
+
+  <script src="js/hippo.js"></script>
+  <script>
+    const fmt = n => n == null || isNaN(n) ? '—' : '€\u00a0' + Math.round(n).toLocaleString('nl-BE').replace(/,/g,'.');
+    const fmtM = n => !n || isNaN(n) ? '—' : (Math.round(n*10)/10).toFixed(1).replace('.',',')+'\u00a0mnd';
+    const fmtPct = n => n == null ? '—' : (Math.round(n*10)/10).toFixed(1).replace('.',',')+('%');
+
+    // ── Load data ──
+    const raw = sessionStorage.getItem('aziri-roi');
+    if (!raw) { document.getElementById('main').innerHTML = '<p style="padding:40px;color:#666">Geen data gevonden. <a href="index.html">Ga terug naar de calculator.</a></p>'; throw new Error('No data'); }
+    const d = JSON.parse(raw);
+    const today = new Date().toLocaleDateString('nl-BE');
+
+    // ── Render ──
+    document.getElementById('main').innerHTML = `
+      <button class="btn-secondary" onclick="window.close()" style="margin-bottom:24px">← Terug</button>
+      <span class="label">ROI Infofiche · 3-jaars projectie</span>
+      <h2 style="font-size:22px;font-weight:700;margin-bottom:4px">${d.bedrijfsnaam}</h2>
+      <p style="font-size:13px;color:var(--text-dim);margin-bottom:20px">${[d.sector,d.contactpersoon].filter(Boolean).join(' · ')} · Opgesteld op ${today}</p>
+
+      <div class="confidential-banner">
+        🔒 <span><strong>Vertrouwelijk</strong> — Dit document is uitsluitend bestemd voor de ontvanger. Verspreiding of gebruik door derden is niet toegestaan zonder schriftelijke toestemming van Aziri.</span>
+      </div>
+
+      <div class="kpi-grid" id="kpi-grid">
+        <div class="kpi-card accent">
+          <div class="kpi-label">Terugverdientijd</div>
+          <div class="kpi-value" id="kpi-be">—</div>
+          <div class="kpi-sub">na eenmalige investering</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Netto winst jaar 1</div>
+          <div class="kpi-value green" id="kpi-netto">—</div>
+          <div class="kpi-sub">na ontwikkeling + licentie</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Cumulatieve ROI (3 jaar)</div>
+          <div class="kpi-value green" id="kpi-roi">—</div>
+          <div class="kpi-sub">rendement op investering</div>
+        </div>
+      </div>
+
+      <div class="tables-grid">
+        <div class="card" style="margin:0"><span class="label">Huidige situatie / maand</span>
+          <table><thead><tr><th>Post</th><th>Bedrag</th></tr></thead><tbody>
+            <tr><td>Operationeel tijdverlies</td><td>${fmt(d.opMaand)}</td></tr>
+            <tr><td>Niet-gefactureerde prestaties</td><td>${fmt(d.nietGef)}</td></tr>
+            <tr><td>Administratieve druk</td><td>${fmt(d.admMaand)}</td></tr>
+            <tr class="total"><td>Totaal / maand</td><td>${fmt(d.totMaand)}</td></tr>
+          </tbody></table>
+        </div>
+        <div class="card" style="margin:0"><span class="label">Bruto besparing / jaar (${d.reductie}% correctie)</span>
+          <table><thead><tr><th>Post</th><th>Besparing</th></tr></thead><tbody>
+            <tr class="pos"><td>Operationeel tijdverlies</td><td>${fmt(d.bespOp)}</td></tr>
+            <tr class="pos"><td>Gerecupereerde omzet</td><td>${fmt(d.bespOmz)}</td></tr>
+            <tr class="pos"><td>Administratieve druk</td><td>${fmt(d.bespAdm)}</td></tr>
+            <tr class="total"><td>Totale jaarlijkse besparing</td><td>${fmt(d.totJaar)}</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+
+      <div class="card">
+        <span class="label">Projectie over 3 jaar</span>
+        <table><thead><tr><th>Periode</th><th>Kosten</th><th>Besparing</th><th>Netto</th></tr></thead><tbody>
+          <tr><td>Jaar 1</td><td>${fmt(d.k1)}</td><td class="pos">${fmt(d.totJaar)}</td><td class="${d.nettoJ1>=0?'pos':'neg'}">${fmt(d.nettoJ1)}</td></tr>
+          <tr><td>Jaar 2</td><td>${fmt(d.k2)}</td><td class="pos">${fmt(d.totJaar)}</td><td class="pos">${fmt(d.nettoJna)}</td></tr>
+          <tr><td>Jaar 3</td><td>${fmt(d.k3)}</td><td class="pos">${fmt(d.totJaar)}</td><td class="pos">${fmt(d.nettoJna)}</td></tr>
+          <tr class="total"><td>Totaal 3 jaar</td><td>${fmt(d.k1+d.k2+d.k3)}</td><td>${fmt(d.totJaar*3)}</td><td>${fmt(d.nettoJ1+d.nettoJna*2)}</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="invest-block">
+        <div class="invest-item"><div class="invest-item-label">Eenmalige ontwikkeling</div><div class="invest-item-val">${fmt(d.een)}</div></div>
+        <div class="invest-item"><div class="invest-item-label">Licentie / jaar</div><div class="invest-item-val">${fmt(d.lic)}</div></div>
+        <div class="invest-item"><div class="invest-item-label">Break-even</div><div class="invest-item-val blue">${fmtM(d.be)}</div></div>
+      </div>
+
+      <div class="aannames">
+        <strong style="color:#555">Aannames:</strong> Oplossingspercentage ${d.reductie}% · ROI-projectie 3 jaar · Geen interne trainingskosten · Besparingen constant over 3 jaar
+      </div>
+
+      <div class="action-row">
+        <button class="btn-primary" onclick="generatePDF()">⬇ &nbsp;Download PDF</button>
+        <button class="btn-secondary" onclick="window.close()">Sluiten</button>
+      </div>
+      <div id="pdf-msg"></div>`;
+
+    // ── Confetti 🎉 ──
+    function launchConfetti() {
+      const colors = ['#5B5BD6','#7B7BE8','#A5A5F0','#ffffff','#3d3d8f'];
+      confetti({ particleCount: 120, spread: 80, origin: { y: 0.5 }, colors, scalar: 1.1 });
+      setTimeout(() => confetti({ particleCount: 60, angle: 60, spread: 55, origin: { x: 0 }, colors }), 300);
+      setTimeout(() => confetti({ particleCount: 60, angle: 120, spread: 55, origin: { x: 1 }, colors }), 500);
+    }
+
+    // ── Odometer count-up ──
+    function countUp(elId, target, duration, prefix, suffix) {
+      const el = document.getElementById(elId);
+      if (!el || !target || isNaN(target)) return;
+      const start = performance.now();
+      const isNeg = target < 0;
+      const abs = Math.abs(target);
+      function update(now) {
+        const progress = Math.min((now - start) / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3);
+        const current = Math.round(abs * ease);
+        const formatted = current.toLocaleString('nl-BE').replace(/,/g,'.');
+        el.textContent = (isNeg ? '−' : '') + prefix + formatted + suffix;
+        if (progress < 1) requestAnimationFrame(update);
+        else el.textContent = (isNeg ? '−' : '') + prefix + Math.round(abs).toLocaleString('nl-BE').replace(/,/g,'.') + suffix;
+      }
+      requestAnimationFrame(update);
+    }
+
+    // ── Animate on load ──
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        launchConfetti();
+        countUp('kpi-be', d.be, 1400, '', ' mnd');
+        countUp('kpi-netto', d.nettoJ1, 1600, '€\u00a0', '');
+        countUp('kpi-roi', d.roi, 1800, '', '%');
+      }, 200);
+    });
+
+    // ── PDF ──
+    function generatePDF() {
+      document.getElementById('pdf-msg').innerHTML = '<div class="loading-wrap" style="padding:12px 0"><div class="loading-bar"></div><p class="loading-text">PDF wordt gegenereerd…</p></div>';
+      setTimeout(() => {
+        try {
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+          const W = 210, mg = 16;
+
+          doc.setFillColor(255,255,255); doc.rect(0,0,W,28,'F');
+          doc.setFillColor(91,91,214); doc.rect(0,25,W,3,'F');
+          try { doc.addImage(HIPPO_B64,'PNG',mg,5,18,18); } catch(e) { doc.setFillColor(91,91,214); doc.roundedRect(mg,6,16,16,3,3,'F'); }
+          doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(91,91,214); doc.text('AZIRI',mg+22,13);
+          doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(156,163,175); doc.text('ROI Calculator · 3-jaars projectie',mg+22,19);
+          doc.text(today,W-mg,13,{align:'right'});
+
+          let y = 36;
+          doc.setFillColor(254,243,199); doc.roundedRect(mg,y,W-mg*2,10,2,2,'F');
+          doc.setDrawColor(252,211,77); doc.setLineWidth(0.3); doc.roundedRect(mg,y,W-mg*2,10,2,2,'S');
+          doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(120,53,15);
+          doc.text('🔒 Vertrouwelijk',mg+4,y+6.5);
+          doc.setFont('helvetica','normal'); doc.setTextColor(146,64,14);
+          doc.text('— Uitsluitend bestemd voor de ontvanger. Verspreiding zonder toestemming van Aziri is niet toegestaan.',mg+34,y+6.5);
+          y += 16;
+
+          doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(17,24,39); doc.text(d.bedrijfsnaam,mg,y); y+=5;
+          doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(156,163,175);
+          doc.text([d.sector,d.contactpersoon].filter(Boolean).join(' · ')+' · Opgesteld op '+today,mg,y); y+=7;
+
+          doc.setFillColor(238,238,255); doc.roundedRect(mg,y,W-mg*2,9,2,2,'F');
+          doc.setFontSize(7.5); doc.setTextColor(91,91,214);
+          doc.text(`Oplossingspercentage: ${d.reductie}% — geen enkele software lost alles 100% op.`,mg+5,y+6); y+=15;
+
+          const kw=(W-mg*2-8)/3, payback=d.be;
+          [{l:'Terugverdientijd',v:fmtM(payback),a:true},{l:'Netto winst jaar 1',v:fmt(d.nettoJ1),a:false},{l:'ROI over 3 jaar',v:fmtPct(d.roi),a:false}].forEach((k,i)=>{
+            const x=mg+i*(kw+4);
+            if(k.a){doc.setFillColor(238,238,255);doc.setDrawColor(91,91,214);doc.setLineWidth(0.5);}
+            else{doc.setFillColor(249,250,251);doc.setDrawColor(226,228,233);doc.setLineWidth(0.3);}
+            doc.roundedRect(x,y,kw,18,2,2,'FD');
+            doc.setFontSize(6); doc.setFont('helvetica','bold'); doc.setTextColor(156,163,175); doc.text(k.l.toUpperCase(),x+5,y+6.5);
+            doc.setFontSize(11); doc.setFont('helvetica','bold'); doc.setTextColor(91,91,214); doc.text(k.v,x+5,y+13.5);
+          }); y+=24;
+
+          const tw=(W-mg*2-8)/2;
+          const lR=[['Operationeel tijdverlies',fmt(d.opMaand)],['Niet-gefactureerde prestaties',fmt(d.nietGef)],['Administratieve druk',fmt(d.admMaand)],['Totaal / maand',fmt(d.totMaand)]];
+          const rR=[['Tijdverlies (na correctie)',fmt(d.bespOp)],['Omzet gerecupereerd',fmt(d.bespOmz)],['Admin (na correctie)',fmt(d.bespAdm)],['Totale jaarlijkse besparing',fmt(d.totJaar)]];
+          doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(40,40,40);
+          doc.text('Huidige situatie / maand',mg,y); doc.text(`Bruto besparing / jaar (${d.reductie}%)`,mg+tw+8,y); y+=3;
+          doc.setDrawColor(200); doc.setLineWidth(0.3); doc.line(mg,y,mg+tw,y); doc.line(mg+tw+8,y,mg+tw+8+tw,y); y+=5;
+          let ly=y, ry=y;
+          lR.forEach((row,ri)=>{const isT=ri===lR.length-1; doc.setFont('helvetica',isT?'bold':'normal'); doc.setFontSize(8); doc.setTextColor(isT?91:70,isT?91:70,isT?214:70); doc.text(row[0],mg,ly); doc.text(row[1],mg+tw,ly,{align:'right'}); ly+=6; if(!isT){doc.setDrawColor(243,244,246);doc.setLineWidth(0.1);doc.line(mg,ly-1.5,mg+tw,ly-1.5);}});
+          rR.forEach((row,ri)=>{const isT=ri===rR.length-1; doc.setFont('helvetica',isT?'bold':'normal'); doc.setFontSize(8); doc.setTextColor(isT?91:70,isT?91:70,isT?214:70); doc.text(row[0],mg+tw+8,ry); doc.text(row[1],W-mg,ry,{align:'right'}); ry+=6; if(!isT){doc.setDrawColor(243,244,246);doc.setLineWidth(0.1);doc.line(mg+tw+8,ry-1.5,W-mg,ry-1.5);}});
+          y=Math.max(ly,ry)+8;
+
+          doc.setFillColor(249,250,251); doc.setDrawColor(226,228,233); doc.setLineWidth(0.3);
+          doc.roundedRect(mg,y,W-mg*2,38,2,2,'FD');
+          doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(91,91,214); doc.text('PROJECTIE OVER 3 JAAR',mg+5,y+6); y+=9;
+          const cW=(W-mg*2-10)/4;
+          doc.setFontSize(7); doc.setFont('helvetica','bold'); doc.setTextColor(156,163,175);
+          doc.text('',mg+5,y); doc.text('Jaar 1',mg+5+cW,y,{align:'right'}); doc.text('Jaar 2',mg+5+cW*2,y,{align:'right'}); doc.text('Jaar 3',mg+5+cW*3,y,{align:'right'}); y+=5;
+          doc.setDrawColor(226,228,233); doc.setLineWidth(0.2); doc.line(mg+3,y,W-mg-3,y); y+=4;
+          doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(107,114,128);
+          doc.text('Kosten',mg+5,y); doc.text(fmt(d.k1),mg+5+cW,y,{align:'right'}); doc.text(fmt(d.k2),mg+5+cW*2,y,{align:'right'}); doc.text(fmt(d.k3),mg+5+cW*3,y,{align:'right'}); y+=6;
+          doc.setTextColor(5,150,105);
+          doc.text('Besparing',mg+5,y); doc.text(fmt(d.totJaar),mg+5+cW,y,{align:'right'}); doc.text(fmt(d.totJaar),mg+5+cW*2,y,{align:'right'}); doc.text(fmt(d.totJaar),mg+5+cW*3,y,{align:'right'}); y+=6;
+          doc.setFont('helvetica','bold'); doc.setTextColor(91,91,214);
+          doc.text('Netto',mg+5,y); doc.text(fmt(d.nettoJ1),mg+5+cW,y,{align:'right'}); doc.text(fmt(d.nettoJna),mg+5+cW*2,y,{align:'right'}); doc.text(fmt(d.nettoJna),mg+5+cW*3,y,{align:'right'}); y+=6;
+          doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(156,163,175);
+          doc.text('Cumulatief netto',mg+5,y); doc.text(fmt(d.nettoJ1),mg+5+cW,y,{align:'right'}); doc.text(fmt(d.nettoJ1+d.nettoJna),mg+5+cW*2,y,{align:'right'}); doc.text(fmt(d.nettoJ1+d.nettoJna*2),mg+5+cW*3,y,{align:'right'}); y+=14;
+
+          doc.setFillColor(238,238,255); doc.setDrawColor(91,91,214); doc.setLineWidth(0.5);
+          doc.roundedRect(mg,y,W-mg*2,17,2,2,'FD');
+          doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(91,91,214); doc.text('INVESTERING & SAMENVATTING',mg+5,y+6);
+          doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(75,85,99);
+          doc.text(`Ontwikkeling: ${fmt(d.een)}`,mg+5,y+12.5); doc.text(`Licentie/jaar: ${fmt(d.lic)}`,mg+66,y+12.5);
+          doc.setFont('helvetica','bold'); doc.setTextColor(91,91,214);
+          doc.text(`Break-even: ${fmtM(d.be)}  |  ROI 3j: ${fmtPct(d.roi)}`,mg+118,y+12.5); y+=24;
+
+          doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(156,163,175);
+          doc.text(`Aannames: oplossingspercentage ${d.reductie}% · projectie 3 jaar · geen interne trainingskosten · besparingen constant`,mg,y); y+=7;
+
+          doc.setFillColor(91,91,214); doc.rect(0,y,W,2,'F'); y+=4;
+          doc.setFillColor(254,243,199); doc.roundedRect(mg,y,tw,9,2,2,'F');
+          doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(120,53,15);
+          doc.text('🔒 Vertrouwelijk — Uitsluitend voor de ontvanger. Niet verspreiden zonder toestemming Aziri.',mg+3,y+6);
+          doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(91,91,214); doc.text('AZIRI',W-mg,y+5,{align:'right'});
+          doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(156,163,175); doc.text('aziri.eu · ROI_'+d.bedrijfsnaam+'_Aziri',W-mg,y+10,{align:'right'});
+
+          doc.save(`ROI_${d.bedrijfsnaam}_Aziri.pdf`);
+          document.getElementById('pdf-msg').innerHTML = '<p class="success">✓ PDF opgeslagen: ROI_'+d.bedrijfsnaam+'_Aziri.pdf</p>';
+        } catch(e) { document.getElementById('pdf-msg').innerHTML = '<div class="error">PDF-fout: '+e.message+'</div>'; }
+      }, 100);
+    }
+  </script>
+</body>
+</html>

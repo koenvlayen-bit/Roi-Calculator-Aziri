@@ -98,151 +98,12 @@ function renderWelcome(){
   set("app",`<div>
     <span class="label">Aziri · ROI Calculator</span>
     <h1 class="welcome-title">Maak verborgen kosten zichtbaar</h1>
-    <p class="welcome-sub">Bereken operationeel tijdverlies, niet-gefactureerde prestaties en administratieve druk — en converteer ze naar een professionele ROI-infofiche.</p>
-    <div class="mode-grid">
-      <div class="mode-card" onclick="startForm()"><div class="mode-icon">📋</div><div class="mode-title">Stap voor stap</div><div class="mode-desc">Begeleid formulier, één sectie per keer. Ideaal tijdens of na een prospect-gesprek.</div></div>
-      <div class="mode-card" onclick="startTranscript()"><div class="mode-icon">🤖</div><div class="mode-title">Transcript / notities</div><div class="mode-desc">Plak gespreksnotities of een transcript — AI extraheert de gegevens automatisch.</div></div>
-    </div></div>`);
+    <p class="welcome-sub">Bereken operationeel tijdverlies, niet-gefactureerde prestaties en administratieve druk — en converteer ze naar een professionele ROI-infofiche voor de klant.</p>
+    <button class="btn-primary" style="margin-top:8px" onclick="startForm()">Start intake →</button>
+  </div>`);
 }
 
 function startForm(){state.screen="form";state.step=0;render();}
-function startTranscript(){state.screen="transcript";render();}
-
-function renderTranscript(){
-  set("app",`<div>${backBtn("goWelcome()")}
-    <span class="label">Modus B — Transcript analyseren</span>
-    <div class="card">
-      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.6">
-        Upload een <strong>.txt bestand</strong> of plak de tekst hieronder. Ontbrekende velden kan je daarna zelf aanvullen in het formulier.
-      </p>
-      <div class="field">
-        <label>Upload .txt bestand <span style="color:#9CA3AF;font-size:11px">(optioneel)</span></label>
-        <input type="file" id="transcript-file" accept=".txt" onchange="loadTxtFile(event)" style="padding:8px;font-size:13px;">
-      </div>
-      <div class="field"><label>Of plak tekst / transcript</label>
-        <textarea id="transcript-txt" placeholder=""></textarea>
-      </div>
-      <button class="btn-primary full" onclick="extractTranscript()">✨ &nbsp;Analyseer met AI</button>
-      <div id="extract-status"></div>
-    </div></div>`);
-}
-
-function loadTxtFile(event){
-  const file = event.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const ta = el("transcript-txt");
-    if(ta) ta.value = e.target.result;
-  };
-  reader.readAsText(file, "UTF-8");
-}
-
-function parseTranscript(text){
-  // Lokale parser — geen API nodig
-  const t = text.toLowerCase();
-  const ex = {};
-
-  // Bedrijfsnaam: zoek na "klant", "bedrijf", "firma", of voor "bvba"/"nv"/"vzw"
-  const bedrijfMatch = text.match(/(?:klant(?:ennaam)?|bedrijf(?:snaam)?|firma)[:\s]+([A-Z][A-Za-z&\s\-\.]{1,40})/i)
-    || text.match(/([A-Z][A-Za-z\s\-]{2,30})\s+(?:bvba|nv|vzw|cv|bv)/i);
-  if(bedrijfMatch) ex.bedrijfsnaam = bedrijfMatch[1].trim();
-
-  // Contactpersoon
-  const contactMatch = text.match(/(?:contact(?:persoon)?|naam|spreker\s*1)[:\s]+([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)/i);
-  if(contactMatch) ex.contactpersoon = contactMatch[1].trim();
-
-  // Medewerkers
-  const medMatch = t.match(/(\d+)\s*(?:medewerkers?|werknemers?|mensen|personen|vakmannen|arbeiders?|man\s+(?:sterk|groot))/);
-  if(medMatch) ex.aantalMedewerkers = parseInt(medMatch[1]);
-
-  // Kostprijs per uur — zoek €X/u of X euro per uur
-  const kostMatch = t.match(/[€e]\s*(\d+)(?:[,.](\d+))?\s*(?:\/\s*u(?:ur)?|per\s*uur)/);
-  if(kostMatch) ex.kostprijsPerUur = parseFloat(kostMatch[1] + (kostMatch[2] ? '.'+kostMatch[2] : ''));
-
-  // Coördinator naam
-  const coordMatch = text.match(/(?:coördinator|coordinator|planner|projectleider|verantwoordelijke|admin)[:\s]+([A-Z][a-z]+)/i);
-  if(coordMatch) ex.naamCoordinator = coordMatch[1].trim();
-
-  // Mensen per incident
-  const mensenMatch = t.match(/(\d+)\s*(?:man|mensen|personen|medewerkers?)\s*(?:wachten|betrokken|staan|per\s*incident)/);
-  if(mensenMatch) ex.aantalMensenPerIncident = parseInt(mensenMatch[1]);
-
-  // Duur per incident in minuten
-  const duurMatch = t.match(/(\d+)\s*(?:minuten?|min\.?)\s*(?:per\s*(?:keer|incident|voorval|wacht))?/);
-  if(duurMatch) ex.duurIncidentMinuten = parseInt(duurMatch[1]);
-
-  // Frequentie per week
-  const freqMatch = t.match(/(\d+(?:[,.]?\d+)?)\s*[xX×]\s*per\s*week/)
-    || t.match(/(\d+(?:[,.]?\d+)?)\s*keer\s*per\s*week/)
-    || t.match(/per\s*week[:\s]+(\d+(?:[,.]?\d+)?)\s*keer/);
-  if(freqMatch) ex.frequentiePerWeek = parseFloat(freqMatch[1].replace(',','.'));
-
-  // Niet-gefactureerd bedrag
-  const nietGefMatch = t.match(/niet[\s-]*(?:gefactureerd|aangerekend|verrekend)[^\d]*[€e]?\s*(\d[\d.,]*)/);
-  if(nietGefMatch){
-    const val = parseFloat(nietGefMatch[1].replace(/\./g,'').replace(',','.'));
-    if(!isNaN(val)){ ex.nietGefactureerdMaand = val; }
-  }
-
-  // Admin uren per week
-  const adminMatch = t.match(/(\d+(?:[,.]?\d+)?)\s*(?:uur|u)\s*(?:per\s*week)?\s*(?:aan\s*)?(?:admin|administratie|papierwerk|verwerking|werkbonnen)/);
-  if(adminMatch) ex.adminUrenPerWeek = parseFloat(adminMatch[1].replace(',','.'));
-
-  // Eenmalige ontwikkelingskosten
-  const eenmaligMatch = t.match(/(?:ontwikkeling|eenmalig|investering)[^\d€]*[€e]?\s*([\d.,]+)/);
-  if(eenmaligMatch){
-    const val = parseFloat(eenmaligMatch[1].replace(/\./g,'').replace(',','.'));
-    if(!isNaN(val) && val > 100) ex.eenmaligeKosten = val;
-  }
-
-  // Jaarlijkse licentie
-  const licMatch = t.match(/(?:licentie|abonnement|jaarlijks)[^\d€]*[€e]?\s*([\d.,]+)\s*(?:per\s*(?:jaar|maand))?/);
-  if(licMatch){
-    let val = parseFloat(licMatch[1].replace(/\./g,'').replace(',','.'));
-    if(!isNaN(val) && val > 0){
-      // Als het per maand is, vermenigvuldig x12
-      if(t.includes('per maand') && val < 500) val = val * 12;
-      ex.jaarlijkseLicentie = val;
-    }
-  }
-
-  return ex;
-}
-
-async function extractTranscript(){
-  const text=el("transcript-txt").value.trim();
-  if(!text){set("extract-status",`<div class="error">Plak eerst een transcript of notities.</div>`);return;}
-  set("extract-status",`<div class="loading-wrap"><div class="loading-bar"></div><p class="loading-text">Transcript wordt geanalyseerd…</p></div>`);
-
-  // Probeer eerst de Netlify Function (Claude API)
-  try{
-    const resp=await fetch("/.netlify/functions/extract",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text})});
-    if(resp.ok){
-      const json=await resp.json();
-      if(!json.error){
-        const raw=json.content?.find(b=>b.type==="text")?.text||"{}";
-        const ex=JSON.parse(raw.replace(/```json|```/g,"").trim());
-        Object.keys(ex).forEach(k=>{if(ex[k]!==null&&state.data[k]!==undefined)state.data[k]=ex[k];});
-        if(ex.nietGefactureerdMaand)state.data.nietGefactureerd=true;
-        state.screen="form";state.step=0;render();
-        return;
-      }
-    }
-  }catch(e){ /* Geen API beschikbaar, val terug op lokale parser */ }
-
-  // Fallback: lokale parser
-  const ex = parseTranscript(text);
-  const aantalVelden = Object.keys(ex).length;
-  Object.keys(ex).forEach(k=>{if(ex[k]!==null&&state.data[k]!==undefined)state.data[k]=ex[k];});
-  if(ex.nietGefactureerdMaand)state.data.nietGefactureerd=true;
-
-  const msg = aantalVelden > 0
-    ? `<div style="font-size:12px;color:var(--green);margin-top:8px">✓ ${aantalVelden} veld(en) herkend zonder AI. Controleer en vul aan waar nodig.</div>`
-    : `<div class="error">Geen gegevens herkend. Vul het formulier manueel in.</div>`;
-  set("extract-status", msg);
-  setTimeout(()=>{ state.screen="form";state.step=0;render(); }, 1500);
-}
 
 function renderForm(){
   const d=state.data, s=state.step;
@@ -599,7 +460,6 @@ function goWelcome(){state.screen="welcome";render();}
 function render(){
   const s=state.screen;
   if(s==="welcome") renderWelcome();
-  else if(s==="transcript") renderTranscript();
   else if(s==="form") renderForm();
   else if(s==="result") renderResult();
 }
