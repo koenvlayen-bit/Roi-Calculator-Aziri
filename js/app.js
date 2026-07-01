@@ -139,7 +139,7 @@ function renderForm(){
   const d=state.data, s=state.step;
   let body="";
   if(s===0){body=`<span class="label">Klantinfo</span>
-    <div class="field"><label>Bedrijfsnaam *</label><input type="text" id="f0" value="${d.bedrijfsnaam}" placeholder="bijv. Bakkerij Maes"></div>
+    <div class="field"><label>Bedrijfsnaam *</label><input type="text" id="f0" value="${d.bedrijfsnaam}" placeholder=""></div>
     <div class="field-grid">
       <div class="field">
         <label>Sector <span style="color:#9CA3AF;font-size:11px">(bepaalt de terminologie)</span></label>
@@ -155,25 +155,25 @@ function renderForm(){
         </select>
         <p class="hint">Kies "Bouw" voor sectorspecifieke terminologie. Andere sectoren gebruiken generieke labels.</p>
       </div>
-      <div class="field"><label>Contactpersoon <span style="color:#9CA3AF;font-size:11px">(optioneel)</span></label><input type="text" id="f2" value="${d.contactpersoon}" placeholder="naam"></div>
+      <div class="field"><label>Contactpersoon <span style="color:#9CA3AF;font-size:11px">(optioneel)</span></label><input type="text" id="f2" value="${d.contactpersoon}" placeholder=""></div>
     </div>
     <div class="btn-row"><button class="btn-primary" onclick="next(0)">Volgende →</button></div>`;}
   else if(s===1){const lbl=L();body=`<span class="label">Team & kostprijs</span>
     <div class="field-grid">
-      <div class="field"><label>${lbl.aantalMedewerkers}</label><input type="number" id="f0" value="${d.aantalMedewerkers}" placeholder="bijv. 8" min="1"></div>
+      <div class="field"><label>${lbl.aantalMedewerkers}</label><input type="number" id="f0" value="${d.aantalMedewerkers}" placeholder="" min="1"></div>
       <div class="field"><label>${lbl.kostprijsPerUur} ${infoTip(lbl.medTooltip)}</label><input type="number" id="f1" value="${d.kostprijsPerUur}" placeholder="65"><p class="hint">Standaard: € 65/u</p></div>
     </div>
-    <div class="field"><label>${lbl.naamCoordinator} <span style="color:#9CA3AF;font-size:11px">(optioneel)</span></label><input type="text" id="f2" value="${d.naamCoordinator}" placeholder="bijv. Jana Claes"></div>
+    <div class="field"><label>${lbl.naamCoordinator} <span style="color:#9CA3AF;font-size:11px">(optioneel)</span></label><input type="text" id="f2" value="${d.naamCoordinator}" placeholder=""></div>
     <div class="btn-row"><button class="btn-secondary" onclick="prev()">←</button><button class="btn-primary" onclick="next(1)">Volgende →</button></div>`;}
   else if(s===2){const lbl=L();body=`<span class="label">${lbl.tijdverliesLabel}</span>
     <p style="font-size:13px;color:var(--text-muted);margin-bottom:18px;line-height:1.6"><strong>${lbl.tijdverliesHint}</strong><br>Denk op <strong>bedrijfsniveau</strong>: dit zijn <em>totale</em> incidenten voor het hele bedrijf, niet per medewerker.</p>
     <div class="field-grid">
-      <div class="field"><label>${lbl.incidentLabel}</label><input type="number" id="f0" value="${d.aantalMensenPerIncident}" placeholder="bijv. 3" min="1"></div>
-      <div class="field"><label>Duur per incident (minuten)</label><input type="number" id="f1" value="${d.duurIncidentMinuten}" placeholder="bijv. 15" min="1"></div>
+      <div class="field"><label>${lbl.incidentLabel}</label><input type="number" id="f0" value="${d.aantalMensenPerIncident}" placeholder="" min="1"></div>
+      <div class="field"><label>Duur per incident (minuten)</label><input type="number" id="f1" value="${d.duurIncidentMinuten}" placeholder="" min="1"></div>
     </div>
     <div class="field">
       <label>Hoe vaak komt dit incident in totaal voor binnen het hele bedrijf per week?</label>
-      <input type="number" id="f2" value="${d.frequentiePerWeek}" placeholder="bijv. 4" min="0" step="0.5">
+      <input type="number" id="f2" value="${d.frequentiePerWeek}" placeholder="" min="0" step="0.5">
       <p class="hint">De berekening vermenigvuldigt dit automatisch met het aantal betrokken mensen en de duur.</p>
     </div>
     <div class="btn-row"><button class="btn-secondary" onclick="prev()">←</button><button class="btn-primary" onclick="next(2)">Volgende →</button></div>`;}
@@ -185,19 +185,19 @@ function renderForm(){
       </div>
     </div>
     <div id="ng-field" style="display:${d.nietGefactureerd?"block":"none"}">
-      <div class="field"><label>Geschat maandelijks niet-gefactureerd bedrag (€)</label><input type="number" id="f0" value="${d.nietGefactureerdMaand||""}" placeholder="bijv. 800" min="0"></div>
+      <div class="field"><label>Geschat maandelijks niet-gefactureerd bedrag (€)</label><input type="number" id="f0" value="${d.nietGefactureerdMaand||""}" placeholder="" min="0"></div>
     </div>
     <div class="btn-row"><button class="btn-secondary" onclick="prev()">←</button><button class="btn-primary" onclick="next(3)">Volgende →</button></div>`;}
   else if(s===4){const lbl=L();body=`<span class="label">Administratieve druk</span>
     <div class="field-grid">
-      <div class="field"><label>${lbl.adminUrenPerWeek}</label><input type="number" id="f0" value="${d.adminUrenPerWeek}" placeholder="bijv. 6" min="0" step="0.5"></div>
+      <div class="field"><label>${lbl.adminUrenPerWeek}</label><input type="number" id="f0" value="${d.adminUrenPerWeek}" placeholder="" min="0" step="0.5"></div>
       <div class="field"><label>${lbl.kostprijsCoord} ${infoTip(lbl.coordTooltip)}</label><input type="number" id="f1" value="${d.kostprijsCoordinatorPerUur||d.kostprijsPerUur}" placeholder="${d.kostprijsPerUur||65}"><p class="hint">Standaard: teamgemiddelde</p></div>
     </div>
     <div class="btn-row"><button class="btn-secondary" onclick="prev()">←</button><button class="btn-primary" onclick="next(4)">Volgende →</button></div>`;}
   else if(s===5){body=`<span class="label">Investering</span>
     <div class="field-grid">
-      <div class="field"><label>Eenmalige ontwikkelingskosten (€)</label><input type="number" id="f0" value="${d.eenmaligeKosten}" placeholder="bijv. 15000" min="0"></div>
-      <div class="field"><label>Jaarlijkse licentiekosten (€)</label><input type="number" id="f1" value="${d.jaarlijkseLicentie}" placeholder="bijv. 2400" min="0"></div>
+      <div class="field"><label>Eenmalige ontwikkelingskosten (€)</label><input type="number" id="f0" value="${d.eenmaligeKosten}" placeholder="" min="0"></div>
+      <div class="field"><label>Jaarlijkse licentiekosten (€)</label><input type="number" id="f1" value="${d.jaarlijkseLicentie}" placeholder="" min="0"></div>
     </div>
     <div class="btn-row"><button class="btn-secondary" onclick="prev()">←</button><button class="btn-primary" onclick="calculate()">📊 &nbsp;Bereken ROI</button></div>`;}
 
