@@ -112,12 +112,30 @@ function renderTranscript(){
   set("app",`<div>${backBtn("goWelcome()")}
     <span class="label">Modus B — Transcript analyseren</span>
     <div class="card">
-      <div class="field"><label>Plak hier je gespreksnotities of transcript</label>
-        <textarea id="transcript-txt" placeholder="Bijv: 'Klant is Bakkerij Maes, sector voeding, 8 medewerkers. Ze wachten gemiddeld 5 minuten, 3x per week bij leveringsproblemen...'"></textarea>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.6">
+        Upload een <strong>.txt bestand</strong> of plak de tekst hieronder. Ontbrekende velden kan je daarna zelf aanvullen in het formulier.
+      </p>
+      <div class="field">
+        <label>Upload .txt bestand <span style="color:#9CA3AF;font-size:11px">(optioneel)</span></label>
+        <input type="file" id="transcript-file" accept=".txt" onchange="loadTxtFile(event)" style="padding:8px;font-size:13px;">
+      </div>
+      <div class="field"><label>Of plak tekst / transcript</label>
+        <textarea id="transcript-txt" placeholder=""></textarea>
       </div>
       <button class="btn-primary full" onclick="extractTranscript()">✨ &nbsp;Analyseer met AI</button>
       <div id="extract-status"></div>
     </div></div>`);
+}
+
+function loadTxtFile(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const ta = el("transcript-txt");
+    if(ta) ta.value = e.target.result;
+  };
+  reader.readAsText(file, "UTF-8");
 }
 
 async function extractTranscript(){
@@ -145,13 +163,23 @@ function renderForm(){
         <label>Sector <span style="color:#9CA3AF;font-size:11px">(bepaalt de terminologie)</span></label>
         <select id="f1">
           <option value="" ${!d.sector?"selected":""}>— Kies sector —</option>
+          <option value="Afvalverwerking" ${d.sector==="Afvalverwerking"?"selected":""}>Afvalverwerking</option>
           <option value="Bouw" ${d.sector==="Bouw"?"selected":""}>Bouw</option>
+          <option value="Consultancy" ${d.sector==="Consultancy"?"selected":""}>Consultancy</option>
+          <option value="Financieel" ${d.sector==="Financieel"?"selected":""}>Financieel</option>
+          <option value="Gezondheidszorg" ${d.sector==="Gezondheidszorg"?"selected":""}>Gezondheidszorg</option>
+          <option value="Groot & Detailhandel" ${d.sector==="Groot & Detailhandel"?"selected":""}>Groot & Detailhandel</option>
+          <option value="Horeca" ${d.sector==="Horeca"?"selected":""}>Horeca</option>
+          <option value="HR Diensten" ${d.sector==="HR Diensten"?"selected":""}>HR Diensten</option>
+          <option value="Huisvestiging" ${d.sector==="Huisvestiging"?"selected":""}>Huisvestiging</option>
+          <option value="Installatie" ${d.sector==="Installatie"?"selected":""}>Installatie</option>
+          <option value="Overheidsinstelling" ${d.sector==="Overheidsinstelling"?"selected":""}>Overheidsinstelling</option>
+          <option value="Productie" ${d.sector==="Productie"?"selected":""}>Productie</option>
+          <option value="Telecom" ${d.sector==="Telecom"?"selected":""}>Telecom</option>
+          <option value="Transport & Logistiek" ${d.sector==="Transport & Logistiek"?"selected":""}>Transport & Logistiek</option>
+          <option value="Verhuur" ${d.sector==="Verhuur"?"selected":""}>Verhuur</option>
           <option value="Voeding" ${d.sector==="Voeding"?"selected":""}>Voeding</option>
-          <option value="Zorg" ${d.sector==="Zorg"?"selected":""}>Zorg</option>
-          <option value="Logistiek" ${d.sector==="Logistiek"?"selected":""}>Logistiek</option>
-          <option value="Techniek" ${d.sector==="Techniek"?"selected":""}>Techniek</option>
-          <option value="Retail" ${d.sector==="Retail"?"selected":""}>Retail</option>
-          <option value="Andere" ${d.sector==="Andere"?"selected":""}>Andere</option>
+          <option value="Overige" ${d.sector==="Overige"?"selected":""}>Overige</option>
         </select>
         <p class="hint">Kies "Bouw" voor sectorspecifieke terminologie. Andere sectoren gebruiken generieke labels.</p>
       </div>
@@ -350,17 +378,18 @@ function generatePDF(){
       const W=210, mg=16;
       const today=new Date().toLocaleDateString("nl-BE");
 
-      // ── Header: wit met paarse lijn, hippo emoji ──
+      // ── Header: wit met paarse lijn, echt hippo-logo ──
       doc.setFillColor(255,255,255); doc.rect(0,0,W,28,"F");
       doc.setFillColor(91,91,214); doc.rect(0,25,W,3,"F");
-      // Hippo blok
-      doc.setFillColor(91,91,214); doc.roundedRect(mg,6,16,16,3,3,"F");
-      doc.setFontSize(10); doc.setTextColor(255,255,255); doc.text("🦛",mg+3,17);
+      // Hippo logo (echt PNG)
+      try { doc.addImage(HIPPO_B64,"PNG",mg,5,18,18); } catch(e) {
+        doc.setFillColor(91,91,214); doc.roundedRect(mg,6,16,16,3,3,"F");
+      }
       // Brand
       doc.setFont("helvetica","bold"); doc.setFontSize(13); doc.setTextColor(91,91,214);
-      doc.text("AZIRI",mg+20,13);
+      doc.text("AZIRI",mg+22,13);
       doc.setFont("helvetica","normal"); doc.setFontSize(7); doc.setTextColor(156,163,175);
-      doc.text("ROI Calculator · 3-jaars projectie",mg+20,19);
+      doc.text("ROI Calculator · 3-jaars projectie",mg+22,19);
       doc.text(today,W-mg,13,{align:"right"});
 
       let y=36;
