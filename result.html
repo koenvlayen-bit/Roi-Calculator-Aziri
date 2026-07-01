@@ -114,8 +114,16 @@
     function launchConfetti() {
       const colors = ['#5B5BD6','#7B7BE8','#A5A5F0','#ffffff','#3d3d8f'];
       confetti({ particleCount: 120, spread: 80, origin: { y: 0.5 }, colors, scalar: 1.1 });
-      setTimeout(() => confetti({ particleCount: 60, angle: 60, spread: 55, origin: { x: 0 }, colors }), 300);
-      setTimeout(() => confetti({ particleCount: 60, angle: 120, spread: 55, origin: { x: 1 }, colors }), 500);
+      setTimeout(() => confetti({ particleCount: 60, angle: 60, spread: 55, origin: { x: 0 }, colors }), 400);
+      setTimeout(() => confetti({ particleCount: 60, angle: 120, spread: 55, origin: { x: 1 }, colors }), 700);
+    }
+
+    // ── Grijze wolken bij negatieve ROI ☁️ ──
+    function launchClouds() {
+      const grays = ['#9CA3AF','#6B7280','#D1D5DB','#4B5563','#E5E7EB'];
+      confetti({ particleCount: 60, spread: 120, origin: { y: 0.3 }, colors: grays, scalar: 1.4, shapes: ['circle'] });
+      setTimeout(() => confetti({ particleCount: 40, spread: 80, origin: { y: 0.2, x: 0.3 }, colors: grays, scalar: 1.6, shapes: ['circle'], ticks: 80 }), 500);
+      setTimeout(() => confetti({ particleCount: 40, spread: 80, origin: { y: 0.2, x: 0.7 }, colors: grays, scalar: 1.6, shapes: ['circle'], ticks: 80 }), 800);
     }
 
     // ── Odometer count-up ──
@@ -140,10 +148,10 @@
     // ── Animate on load ──
     window.addEventListener('load', () => {
       setTimeout(() => {
-        launchConfetti();
-        countUp('kpi-be', d.be, 1400, '', ' mnd');
-        countUp('kpi-netto', d.nettoJ1, 1600, '€\u00a0', '');
-        countUp('kpi-roi', d.roi, 1800, '', '%');
+        if (d.roi > 0) { launchConfetti(); } else { launchClouds(); }
+        countUp('kpi-be', d.be, 2500, '', ' mnd');
+        countUp('kpi-netto', d.nettoJ1, 3000, '€\u00a0', '');
+        countUp('kpi-roi', d.roi, 3500, '', '%');
       }, 200);
     });
 
