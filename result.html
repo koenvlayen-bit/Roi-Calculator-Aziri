@@ -148,7 +148,7 @@
     // ── Animate on load ──
     window.addEventListener('load', () => {
       setTimeout(() => {
-        if (d.roi > 0) { launchConfetti(); } else { launchClouds(); }
+        const roiVal = parseFloat(d.roi); if (!isNaN(roiVal) && roiVal > 0) { launchConfetti(); } else { launchClouds(); }
         countUp('kpi-be', d.be, 2500, '', ' mnd');
         countUp('kpi-netto', d.nettoJ1, 3000, '€\u00a0', '');
         countUp('kpi-roi', d.roi, 3500, '', '%');
