@@ -200,7 +200,7 @@
 
   <!-- ── RESULTAAT ── -->
   <div class="result-screen" id="result-view">
-    <button class="btn-secondary" onclick="newCalc()" style="margin-bottom:24px">← Nieuwe berekening</button>
+    <button class="btn-secondary" onclick="editCalc()" style="margin-bottom:24px">← Bewerken</button>
     <span class="label">ROI Infofiche · 3-jaars projectie</span>
     <h2 style="font-size:22px;font-weight:700;margin-bottom:4px" id="res-naam"></h2>
     <p style="font-size:13px;color:var(--text-dim);margin-bottom:20px" id="res-meta"></p>
@@ -255,7 +255,8 @@
 
     <div class="action-row">
       <button class="btn-primary" onclick="generatePDF()">⬇ &nbsp;Download PDF</button>
-      <button class="btn-secondary" onclick="newCalc()">Nieuwe berekening</button>
+      <button class="btn-secondary" onclick="editCalc()">← Bewerken</button>
+      <button class="btn-secondary" onclick="resetCalc()">Nieuwe berekening</button>
     </div>
     <div id="pdf-msg"></div>
   </div><!-- /result-view -->
@@ -402,12 +403,35 @@
       }, 150);
     }
 
-    function newCalc() {
+    function editCalc() {
+      // Terug naar formulier, velden behouden
       el('intake-view').style.display = 'block';
       el('result-view').classList.remove('visible');
       el('header-sub').textContent = 'ROI Calculator';
       window.scrollTo(0, 0);
     }
+
+    function resetCalc() {
+      // Alle velden leegmaken
+      ['bedrijfsnaam','contactpersoon','naamCoordinator','aantalMedewerkers',
+       'aantalMensen','duurMinuten','frequentie','nietGefMaand',
+       'adminUren','kostCoord','eenmalig','licentie'].forEach(id => {
+        const e = el(id); if(e) e.value = '';
+      });
+      el('kostprijsPerUur').value = '65';
+      el('sector').value = '';
+      el('reductie').value = '100';
+      el('pct-badge').textContent = '100%';
+      updateSliderBg(el('reductie'));
+      toggleNG(false);
+      el('live-sidebar').innerHTML = '<div class="rv-empty">Vul de gegevens in —<br>de preview verschijnt hier live.</div>';
+      el('intake-view').style.display = 'block';
+      el('result-view').classList.remove('visible');
+      el('header-sub').textContent = 'ROI Calculator';
+      window.scrollTo(0, 0);
+    }
+
+    function newCalc() { resetCalc(); }
 
     // ── Confetti & wolken ──
     function launchConfetti() {
